@@ -1,0 +1,199 @@
+// Grammar-Kit grammar for Lezer grammar files (*.grammar).
+// Ported from the official Lezer grammar for Lezer: https://github.com/lezer-parser/lezer-grammar/blob/main/src/lezer.grammar
+// and the lezer-generator's own parser: https://github.com/lezer-parser/generator/blob/main/src/parse.ts
+{
+  parserClass="de.paulmethfessel.lezer.parser.LezerParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+  generateTokenAccessors=false
+
+  psiClassPrefix="Lezer"
+  psiImplClassSuffix="Impl"
+  psiPackage="de.paulmethfessel.lezer.psi"
+  psiImplPackage="de.paulmethfessel.lezer.psi.impl"
+
+  elementTypeHolderClass="de.paulmethfessel.lezer.psi.LezerTypes"
+  elementTypeClass="de.paulmethfessel.lezer.psi.LezerElementType"
+  tokenTypeClass="de.paulmethfessel.lezer.psi.LezerTokenType"
+
+  tokens=[
+    LINE_COMMENT='regexp://.*'
+    BLOCK_COMMENT='regexp:/\*([^*]|\*+[^*/])*\*+/'
+    STRING='regexp:("([^"\\\n]|\\.)*"|\x27([^\x27\\\n]|\\.)*\x27)'
+    CHAR_SET='regexp:\$\[([^\]\\\n]|\\.)*]'
+    INVERTED_CHAR_SET='regexp:!\[([^\]\\\n]|\\.)*]'
+
+    AT_TOP='@top'
+    AT_TOKENS='@tokens'
+    AT_LOCAL='@local'
+    AT_ELSE='@else'
+    AT_SKIP='@skip'
+    AT_PRECEDENCE='@precedence'
+    AT_LEFT='@left'
+    AT_RIGHT='@right'
+    AT_CUT='@cut'
+    AT_EXTERNAL='@external'
+    AT_CONTEXT='@context'
+    AT_DIALECTS='@dialects'
+    AT_DETECT_DELIM='@detectDelim'
+    AT_CONFLICT='@conflict'
+    AT_SPECIALIZE='@specialize'
+    AT_EXTEND='@extend'
+    CHAR_CLASS='regexp:@(asciiLetter|asciiLowercase|asciiUppercase|digit|whitespace|eof)'
+    AT_NAME='regexp:@[\w\-]+'
+
+    // Contextual keywords, they are valid identifiers everywhere else
+    KW_TOKENS='tokens'
+    KW_FROM='from'
+    KW_AS='as'
+    KW_PROP='prop'
+    KW_PROP_SOURCE='propSource'
+    KW_EXTEND='extend'
+    KW_SPECIALIZE='specialize'
+
+    ANY_CHAR='_'
+    NAME='regexp:[\w\-]+'
+
+    LBRACE='{'
+    RBRACE='}'
+    LPAREN='('
+    RPAREN=')'
+    LBRACKET='['
+    RBRACKET=']'
+    LANGLE='<'
+    RANGLE='>'
+    COMMA=','
+    DOT='.'
+    EQ='='
+    PIPE='|'
+    BANG='!'
+    TILDE='~'
+    STAR='*'
+    PLUS='+'
+    QUESTION='?'
+  ]
+
+  extends(".*Expression")=expression
+}
+
+grammarFile ::= declarationItem*
+
+private declarationItem ::= !<<eof>> declaration {pin=1 recoverWhile=declarationRecover}
+private declarationRecover ::= !(AT_TOP | AT_PRECEDENCE | AT_TOKENS | AT_LOCAL | AT_EXTERNAL | AT_CONTEXT
+                                 | AT_DIALECTS | AT_SKIP | AT_DETECT_DELIM | identifier (LBRACE | LBRACKET | LANGLE))
+
+private declaration ::= topRuleDeclaration
+                      | precedenceDeclaration
+                      | tokensDeclaration
+                      | localTokensDeclaration
+                      | externalTokensDeclaration
+                      | externalPropDeclaration
+                      | externalPropSourceDeclaration
+                      | externalSpecializeDeclaration
+                      | contextDeclaration
+                      | dialectsDeclaration
+                      | skipDeclaration
+                      | detectDelimDeclaration
+                      | ruleDeclaration
+
+// Rules
+
+ruleDeclaration ::= ruleName props? paramList? body {pin=1}
+topRuleDeclaration ::= AT_TOP ruleName props? paramList? body {pin=1}
+
+paramList ::= LANGLE [simpleName (COMMA simpleName)*] RANGLE {pin=1}
+body ::= LBRACE expression? RBRACE {pin=1}
+
+props ::= LBRACKET [prop (COMMA prop)*] RBRACKET {pin=1}
+prop ::= (AT_NAME | simpleName) [EQ propValue*] {pin(".*")=1}
+private propValue ::= STRING | simpleName | DOT | propInterpolation
+propInterpolation ::= LBRACE ruleName RBRACE {pin=1}
+
+// Precedence
+
+precedenceDeclaration ::= AT_PRECEDENCE precedenceBody {pin=1}
+precedenceBody ::= LBRACE (precedence COMMA?)* RBRACE {pin=1}
+precedence ::= precedenceName (AT_LEFT | AT_RIGHT | AT_CUT)?
+
+// Tokens
+
+tokensDeclaration ::= AT_TOKENS tokensBody {pin=1}
+tokensBody ::= LBRACE tokenDeclarationItem* RBRACE {pin=1}
+
+localTokensDeclaration ::= AT_LOCAL KW_TOKENS localTokensBody {pin=1}
+localTokensBody ::= LBRACE (elseToken | tokenDeclarationItem)* RBRACE {pin=1}
+elseToken ::= AT_ELSE ruleName props? {pin=1}
+
+private tokenDeclarationItem ::= !RBRACE tokenDeclaration {pin=1 recoverWhile=tokenDeclarationRecover}
+private tokenDeclarationRecover ::= !(RBRACE | AT_PRECEDENCE | AT_CONFLICT | AT_ELSE | STRING
+                                      | identifier (LBRACE | LBRACKET | LANGLE))
+private tokenDeclaration ::= tokenPrecedenceDeclaration
+                           | tokenConflictDeclaration
+                           | literalTokenDeclaration
+                           | ruleDeclaration
+
+tokenPrecedenceDeclaration ::= AT_PRECEDENCE tokenPrecedenceBody {pin=1}
+tokenPrecedenceBody ::= LBRACE ((STRING | nameExpression) COMMA?)* RBRACE {pin=1}
+tokenConflictDeclaration ::= AT_CONFLICT conflictBody {pin=1}
+conflictBody ::= LBRACE ((STRING | nameExpression) COMMA?)* RBRACE {pin=1}
+literalTokenDeclaration ::= STRING props?
+
+// External declarations
+
+externalTokensDeclaration ::= AT_EXTERNAL KW_TOKENS simpleName KW_FROM STRING externalTokenSet {pin=2}
+externalPropDeclaration ::= AT_EXTERNAL KW_PROP simpleName (KW_AS simpleName)? KW_FROM STRING {pin=2}
+externalPropSourceDeclaration ::= AT_EXTERNAL KW_PROP_SOURCE simpleName KW_FROM STRING {pin=2}
+externalSpecializeDeclaration ::= AT_EXTERNAL (KW_EXTEND | KW_SPECIALIZE) body simpleName KW_FROM STRING externalTokenSet {pin=2}
+
+externalTokenSet ::= LBRACE ((externalConflictDeclaration | externalToken) COMMA?)* RBRACE {pin=1}
+externalToken ::= ruleName props?
+externalConflictDeclaration ::= AT_CONFLICT conflictBody {pin=1}
+
+// Other declarations
+
+contextDeclaration ::= AT_CONTEXT simpleName KW_FROM STRING {pin=1}
+dialectsDeclaration ::= AT_DIALECTS dialectsBody {pin=1}
+dialectsBody ::= LBRACE (simpleName COMMA?)* RBRACE {pin=1}
+skipDeclaration ::= AT_SKIP body skipBody? {pin=1}
+skipBody ::= LBRACE (topRuleDeclaration | ruleDeclaration)* RBRACE {pin=1}
+detectDelimDeclaration ::= AT_DETECT_DELIM
+
+// Expressions
+
+expression ::= choiceExpression
+choiceExpression ::= sequenceExpression (PIPE sequenceExpression)*
+sequenceExpression ::= sequenceItem+
+private sequenceItem ::= marker | postfixExpression
+
+private marker ::= precedenceMarker | ambiguityMarker
+precedenceMarker ::= BANG precedenceName {pin=1}
+ambiguityMarker ::= TILDE simpleName {pin=1}
+
+postfixExpression ::= atomExpression (QUESTION | STAR | PLUS)*
+
+private atomExpression ::= literalExpression
+                         | charSetExpression
+                         | anyCharExpression
+                         | charClassExpression
+                         | specializeExpression
+                         | parenExpression
+                         | inlineRuleExpression
+                         | nameExpression
+
+literalExpression ::= STRING
+charSetExpression ::= CHAR_SET | INVERTED_CHAR_SET
+anyCharExpression ::= ANY_CHAR
+charClassExpression ::= CHAR_CLASS
+specializeExpression ::= (AT_SPECIALIZE | AT_EXTEND) props? argList {pin=1}
+parenExpression ::= LPAREN expression? RPAREN {pin=1}
+inlineRuleExpression ::= (ruleName props? | props) body
+nameExpression ::= ruleName (DOT ruleName)? argList?
+
+argList ::= LANGLE [expression (COMMA expression)*] RANGLE {pin=1}
+
+// Names
+
+ruleName ::= identifier
+precedenceName ::= identifier
+simpleName ::= identifier
+private identifier ::= NAME | KW_TOKENS | KW_FROM | KW_AS | KW_PROP | KW_PROP_SOURCE | KW_EXTEND | KW_SPECIALIZE

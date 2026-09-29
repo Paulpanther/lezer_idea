@@ -1,0 +1,12 @@
+Rule {
+  a b c |
+  a+ b* c? (d | e)+ |
+  !prec ~ambig a |
+  "lit" $[a-z] ![\n] _ @asciiLetter std.digit |
+  Inline { x } | [@name=Anon] { y } |
+  call<a, b | c> scoped.name |
+  @specialize<Identifier, "if"> | @extend[@name=Kw]<Identifier, "else">
+  ()
+}
+
+WithInterpolation[@name={name}Suffix, @export] { tokens from as prop propSource extend specialize }

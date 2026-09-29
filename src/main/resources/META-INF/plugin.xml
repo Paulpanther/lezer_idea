@@ -1,0 +1,37 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>de.paulmethfessel.lezer</id>
+    <name>Lezer Grammar</name>
+    <vendor>Paul Methfessel</vendor>
+    <description><![CDATA[
+        <p>Language support for <a href="https://lezer.codemirror.net/">Lezer</a> grammar files (<code>*.grammar</code>).</p>
+        <ul>
+            <li>Syntax highlighting with configurable colors</li>
+            <li>Line and block commenting</li>
+            <li>Brace matching and quote auto-closing</li>
+        </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType name="Lezer Grammar"
+                  implementationClass="de.paulmethfessel.lezer.LezerFileType"
+                  fieldName="INSTANCE"
+                  language="Lezer"
+                  extensions="grammar"/>
+        <lang.parserDefinition language="Lezer"
+                               implementationClass="de.paulmethfessel.lezer.parser.LezerParserDefinition"/>
+        <lang.syntaxHighlighterFactory language="Lezer"
+                                       implementationClass="de.paulmethfessel.lezer.highlighting.LezerSyntaxHighlighterFactory"/>
+        <annotator language="Lezer"
+                   implementationClass="de.paulmethfessel.lezer.highlighting.LezerHighlightingAnnotator"/>
+        <colorSettingsPage implementation="de.paulmethfessel.lezer.highlighting.LezerColorSettingsPage"/>
+        <lang.commenter language="Lezer"
+                        implementationClass="de.paulmethfessel.lezer.editor.LezerCommenter"/>
+        <lang.braceMatcher language="Lezer"
+                           implementationClass="de.paulmethfessel.lezer.editor.LezerBraceMatcher"/>
+        <lang.quoteHandler language="Lezer"
+                           implementationClass="de.paulmethfessel.lezer.editor.LezerQuoteHandler"/>
+    </extensions>
+</idea-plugin>

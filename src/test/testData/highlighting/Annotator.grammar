@@ -1,0 +1,22 @@
+@precedence { <info textAttributesKey="LEZER_PRECEDENCE_NAME">times</info> @left }
+
+@top <info textAttributesKey="LEZER_TERM">Program</info> { <info textAttributesKey="LEZER_TERM">expr</info>* }
+
+<info textAttributesKey="LEZER_TERM">expr</info>[<info textAttributesKey="LEZER_PROP_NAME">group</info>=Value] {
+  !<info textAttributesKey="LEZER_PRECEDENCE_NAME">times</info> from |
+  <info textAttributesKey="LEZER_TOKEN">Number</info> |
+  <info textAttributesKey="LEZER_TERM">Inline</info> { <info textAttributesKey="LEZER_TEMPLATE_CALL">list</info><<info textAttributesKey="LEZER_TOKEN">Number</info>> }
+}
+
+<info textAttributesKey="LEZER_TEMPLATE_DECLARATION">list</info><item> { item ("," item)* }
+
+@skip {} {
+  <info textAttributesKey="LEZER_TERM">String</info> { '"' <info textAttributesKey="LEZER_TERM">expr</info> '"' }
+}
+
+@tokens {
+  <info textAttributesKey="LEZER_TOKEN">Number</info> { <info textAttributesKey="LEZER_TOKEN">digits</info> { @digit+ } } <info textAttributesKey="LEZER_TOKEN">Number2</info> { <info textAttributesKey="LEZER_TOKEN">digits</info> }
+  <info textAttributesKey="LEZER_TOKEN">expr2</info> { expr }
+}
+
+@external <info textAttributesKey="LEZER_CONTEXTUAL_KEYWORD">tokens</info> ext <info textAttributesKey="LEZER_CONTEXTUAL_KEYWORD">from</info> "./tokens" { <info textAttributesKey="LEZER_TOKEN">Semi</info> }

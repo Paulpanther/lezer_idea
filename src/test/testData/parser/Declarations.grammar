@@ -1,0 +1,35 @@
+@precedence { prefix, times @left, plus @left, else @right, cut @cut }
+
+@top Program { statement* }
+@top Other[@dialect=ts] { "x" }
+
+statement[@isGroup=Statement] { Block { "{" statement* "}" } }
+
+list<item> { item ("," item)* }
+
+@tokens {
+  space { @whitespace+ }
+  Number[closedBy="}", group=Value.Literal] { @digit+ }
+  "(" ")" "{"[@name=LBrace]
+  @precedence { Number, "(", space }
+  @conflict { Number, space }
+}
+
+@local tokens {
+  stringEnd[@name='"'] { '"' }
+  @else stringContent
+}
+
+@skip { space | Comment }
+@skip {} {
+  String { '"' (stringContent | Escape)* stringEnd }
+}
+
+@external tokens insertSemicolon from "./tokens" { insertSemi, Other[@name=Else], @conflict { a, b } }
+@external prop myProp as prop from "./props"
+@external propSource highlight from "./highlight"
+@external specialize { Identifier } keywords from "./tokens" { kw }
+@external extend { Identifier } ext from "./tokens" { from }
+@context tracker from "./context"
+@dialects { ts, jsx }
+@detectDelim

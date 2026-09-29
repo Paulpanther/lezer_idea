@@ -1,0 +1,11 @@
+Broken { a , b }
+
+@top Program { a }
+
+@tokens {
+  Good { "g" }
+  Bad {
+  Other { "o" }
+}
+
+Fine { x }
