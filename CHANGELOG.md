@@ -9,3 +9,6 @@
 - Lezer grammar file type (`*.grammar`) with JFlex lexer and Grammar-Kit parser
 - Syntax highlighting with a color settings page
 - Commenter, brace matcher and quote handler
+- References with go to declaration, completion and find usages
+- Rename and safe delete refactorings
+- Structure view and navigation bar

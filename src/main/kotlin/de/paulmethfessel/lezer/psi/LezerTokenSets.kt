@@ -7,6 +7,12 @@ object LezerTokenSets {
     @JvmField
     val COMMENTS = TokenSet.create(LINE_COMMENT, BLOCK_COMMENT)
 
+    /** Tokens that can be used as names. */
+    @JvmField
+    val IDENTIFIERS = TokenSet.create(
+        NAME, KW_TOKENS, KW_FROM, KW_AS, KW_PROP, KW_PROP_SOURCE, KW_EXTEND, KW_SPECIALIZE,
+    )
+
     @JvmField
     val STRINGS = TokenSet.create(STRING)
 

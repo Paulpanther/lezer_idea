@@ -7,6 +7,9 @@
         <p>Language support for <a href="https://lezer.codemirror.net/">Lezer</a> grammar files (<code>*.grammar</code>).</p>
         <ul>
             <li>Syntax highlighting with configurable colors</li>
+            <li>Go to declaration, find usages and completion for rules, tokens, parameters, precedences, dialects and props</li>
+            <li>Rename and safe delete refactorings</li>
+            <li>Structure view and navigation bar</li>
             <li>Line and block commenting</li>
             <li>Brace matching and quote auto-closing</li>
         </ul>
@@ -33,5 +36,14 @@
                            implementationClass="de.paulmethfessel.lezer.editor.LezerBraceMatcher"/>
         <lang.quoteHandler language="Lezer"
                            implementationClass="de.paulmethfessel.lezer.editor.LezerQuoteHandler"/>
+        <lang.findUsagesProvider language="Lezer"
+                                 implementationClass="de.paulmethfessel.lezer.findUsages.LezerFindUsagesProvider"/>
+        <lang.refactoringSupport language="Lezer"
+                                 implementationClass="de.paulmethfessel.lezer.refactoring.LezerRefactoringSupportProvider"/>
+        <lang.namesValidator language="Lezer"
+                             implementationClass="de.paulmethfessel.lezer.refactoring.LezerNamesValidator"/>
+        <lang.psiStructureViewFactory language="Lezer"
+                                      implementationClass="de.paulmethfessel.lezer.structure.LezerStructureViewFactory"/>
+        <navbar implementation="de.paulmethfessel.lezer.structure.LezerNavBarModelExtension"/>
     </extensions>
 </idea-plugin>

@@ -7,6 +7,9 @@ Language support for [Lezer](https://lezer.codemirror.net/) grammar files (`*.gr
 ## Features
 
 - Syntax highlighting, configurable under *Settings | Editor | Color Scheme | Lezer Grammar*
+- Go to declaration, find usages and completion for rules, tokens, parameters, precedences, dialects and external props
+- Rename (in place) and safe delete
+- Structure view and navigation bar
 - Line/block commenting, brace matching, quote auto-closing
 
 ## Development
@@ -15,6 +18,8 @@ Language support for [Lezer](https://lezer.codemirror.net/) grammar files (`*.gr
   [lezer-generator](https://github.com/lezer-parser/generator/blob/main/src/parse.ts).
 - Parser/PSI: [`src/main/grammar/Lezer.bnf`](src/main/grammar/Lezer.bnf) (Grammar-Kit), ported from the official
   [Lezer grammar for Lezer](https://github.com/lezer-parser/lezer-grammar/blob/main/src/lezer.grammar).
+- Name resolution: [`LezerResolver`](src/main/kotlin/de/paulmethfessel/lezer/resolve/LezerResolver.kt) follows the
+  scoping of the lezer-generator (parameters shadow rules, token contexts only see tokens, inline rules aren't referenceable).
 - Both are generated at build time by the `org.jetbrains.intellij.platform.grammarkit` Gradle plugin
   (`generateLexer`/`generateParser`) into `build/generated/sources`.
 

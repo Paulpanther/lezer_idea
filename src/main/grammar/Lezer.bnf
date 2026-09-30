@@ -74,6 +74,13 @@
   ]
 
   extends(".*Expression")=expression
+
+  // Declarations: named elements that can be referenced, renamed, shown in the structure view, ...
+  implements("ruleDeclaration|topRuleDeclaration|inlineRuleExpression|externalToken|elseToken|precedence|dialect|parameter|externalTokensDeclaration|externalPropDeclaration|externalPropSourceDeclaration|externalSpecializeDeclaration|contextDeclaration")="de.paulmethfessel.lezer.psi.LezerNamedElement"
+  mixin("ruleDeclaration|topRuleDeclaration|inlineRuleExpression|externalToken|elseToken|precedence|dialect|parameter|externalTokensDeclaration|externalPropDeclaration|externalPropSourceDeclaration|externalSpecializeDeclaration|contextDeclaration")="de.paulmethfessel.lezer.psi.impl.LezerNamedElementImpl"
+
+  // Names that can be references to declarations
+  mixin("ruleName|precedenceName|propName|simpleName")="de.paulmethfessel.lezer.psi.impl.LezerReferenceElementImpl"
 }
 
 grammarFile ::= declarationItem*
@@ -101,11 +108,12 @@ private declaration ::= topRuleDeclaration
 ruleDeclaration ::= ruleName props? paramList? body {pin=1}
 topRuleDeclaration ::= AT_TOP ruleName props? paramList? body {pin=1}
 
-paramList ::= LANGLE [simpleName (COMMA simpleName)*] RANGLE {pin=1}
+paramList ::= LANGLE [parameter (COMMA parameter)*] RANGLE {pin=1}
+parameter ::= identifier
 body ::= LBRACE expression? RBRACE {pin=1}
 
 props ::= LBRACKET [prop (COMMA prop)*] RBRACKET {pin=1}
-prop ::= (AT_NAME | simpleName) [EQ propValue*] {pin(".*")=1}
+prop ::= (AT_NAME | propName) [EQ propValue*] {pin(".*")=1}
 private propValue ::= STRING | simpleName | DOT | propInterpolation
 propInterpolation ::= LBRACE ruleName RBRACE {pin=1}
 
@@ -153,7 +161,8 @@ externalConflictDeclaration ::= AT_CONFLICT conflictBody {pin=1}
 
 contextDeclaration ::= AT_CONTEXT simpleName KW_FROM STRING {pin=1}
 dialectsDeclaration ::= AT_DIALECTS dialectsBody {pin=1}
-dialectsBody ::= LBRACE (simpleName COMMA?)* RBRACE {pin=1}
+dialectsBody ::= LBRACE (dialect COMMA?)* RBRACE {pin=1}
+dialect ::= identifier
 skipDeclaration ::= AT_SKIP body skipBody? {pin=1}
 skipBody ::= LBRACE (topRuleDeclaration | ruleDeclaration)* RBRACE {pin=1}
 detectDelimDeclaration ::= AT_DETECT_DELIM
@@ -195,5 +204,6 @@ argList ::= LANGLE [expression (COMMA expression)*] RANGLE {pin=1}
 
 ruleName ::= identifier
 precedenceName ::= identifier
+propName ::= identifier
 simpleName ::= identifier
 private identifier ::= NAME | KW_TOKENS | KW_FROM | KW_AS | KW_PROP | KW_PROP_SOURCE | KW_EXTEND | KW_SPECIALIZE
