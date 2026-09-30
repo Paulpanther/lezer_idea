@@ -11,6 +11,11 @@ Language support for [Lezer](https://lezer.codemirror.net/) grammar files (`*.gr
 - Rename (in place) and safe delete
 - Structure view and navigation bar
 - Line/block commenting, brace matching, quote auto-closing, code folding (blocks, comments, `// region`)
+- Errors and warnings of [`@lezer/generator`](https://github.com/lezer-parser/generator) (unused rules, conflicts, …) while typing
+- *Lezer Generator* run configuration with all generator options, started from the gutter icon on `@top`
+- Uses a local (`npm i -D @lezer/generator`) or global installation and offers to install it, configurable under
+  *Settings | Languages & Frameworks | Lezer Grammar*. Node.js is taken from the JavaScript plugin's settings if available,
+  otherwise it is detected automatically
 - Code formatter (Reformat Code) with configurable indentation and spacing
 
 ## Development
@@ -31,3 +36,11 @@ Language support for [Lezer](https://lezer.codemirror.net/) grammar files (`*.gr
 
 `src/test/testData/parser/real` contains grammars from the lezer-parser repositories (MIT licensed) that must parse
 without errors.
+
+The tests that run the real generator are skipped unless `LEZER_GENERATOR_DIR` points to an installed
+`@lezer/generator` package (and Node.js is found):
+
+```sh
+npm i --prefix /tmp/lezer @lezer/generator
+LEZER_GENERATOR_DIR=/tmp/lezer/node_modules/@lezer/generator ./gradlew test
+```

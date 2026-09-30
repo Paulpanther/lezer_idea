@@ -1,0 +1,6 @@
+<!-- Loaded if the JavaScript plugin is installed -->
+<idea-plugin>
+    <extensions defaultExtensionNs="de.paulmethfessel.lezer">
+        <nodeInterpreterProvider implementation="de.paulmethfessel.lezer.generator.JavaScriptNodeInterpreterProvider"/>
+    </extensions>
+</idea-plugin>

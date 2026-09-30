@@ -12,12 +12,22 @@
             <li>Structure view and navigation bar</li>
             <li>Line and block commenting</li>
             <li>Code folding</li>
+            <li>Errors and warnings of <a href="https://github.com/lezer-parser/generator">@lezer/generator</a> while typing</li>
+            <li>Run configuration to generate the parser, with a gutter icon on <code>@top</code></li>
             <li>Brace matching and quote auto-closing</li>
             <li>Code formatter</li>
         </ul>
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
+    <!-- Uses the Node.js interpreter configured for the project, if available -->
+    <depends optional="true" config-file="lezer-javascript.xml">JavaScript</depends>
+
+    <extensionPoints>
+        <extensionPoint qualifiedName="de.paulmethfessel.lezer.nodeInterpreterProvider"
+                        interface="de.paulmethfessel.lezer.generator.LezerNodeInterpreterProvider"
+                        dynamic="true"/>
+    </extensionPoints>
 
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="Lezer Grammar"
@@ -56,5 +66,19 @@
                         implementationClass="de.paulmethfessel.lezer.formatter.LezerFormattingModelBuilder"/>
         <langCodeStyleSettingsProvider
                 implementation="de.paulmethfessel.lezer.formatter.LezerLanguageCodeStyleSettingsProvider"/>
+
+        <!-- lezer-generator -->
+        <externalAnnotator language="Lezer"
+                           implementationClass="de.paulmethfessel.lezer.generator.LezerGeneratorAnnotator"/>
+        <editorNotificationProvider implementation="de.paulmethfessel.lezer.generator.LezerGeneratorNotificationProvider"/>
+        <projectConfigurable parentId="language"
+                             instance="de.paulmethfessel.lezer.generator.LezerConfigurable"
+                             id="de.paulmethfessel.lezer.settings"
+                             displayName="Lezer Grammar"/>
+        <notificationGroup id="Lezer Generator" displayType="BALLOON"/>
+        <configurationType implementation="de.paulmethfessel.lezer.generator.run.LezerGeneratorConfigurationType"/>
+        <runConfigurationProducer implementation="de.paulmethfessel.lezer.generator.run.LezerGeneratorRunConfigurationProducer"/>
+        <runLineMarkerContributor language="Lezer"
+                                  implementationClass="de.paulmethfessel.lezer.generator.run.LezerRunLineMarkerContributor"/>
     </extensions>
 </idea-plugin>
