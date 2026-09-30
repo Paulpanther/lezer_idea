@@ -10,7 +10,7 @@ Language support for [Lezer](https://lezer.codemirror.net/) grammar files (`*.gr
 - Go to declaration, find usages and completion for rules, tokens, parameters, precedences, dialects and external props
 - Rename (in place) and safe delete
 - Structure view and navigation bar
-- Line/block commenting, brace matching, quote auto-closing
+- Line/block commenting, brace matching, quote auto-closing, code folding (blocks, comments, `// region`)
 - Code formatter (Reformat Code) with configurable indentation and spacing
 
 ## Development

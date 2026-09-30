@@ -1,0 +1,32 @@
+<fold text='//...'>// A small grammar
+// with a header comment</fold>
+
+@precedence <fold text='{...}'>{
+  times @left,
+  plus @left
+}</fold>
+
+@top Program { expression* }
+
+<fold text='/*...*/'>/* Multi-line
+   block comment */</fold>
+expression <fold text='{...}'>{
+  Number |
+  BinaryExpression <fold text='{...}'>{
+    expression !times "*" expression
+  }</fold>
+}</fold>
+
+/* Single line block comment */
+// Single line comment
+
+<fold text='Tokens'>// region Tokens
+@tokens <fold text='{...}'>{
+  Number { @digit+ }
+  @precedence { Number, "x" }
+}</fold>
+// endregion</fold>
+
+@external tokens insertSemi from "./tokens" <fold text='{...}'>{
+  InsertSemi
+}</fold>

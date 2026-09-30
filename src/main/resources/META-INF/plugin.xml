@@ -11,6 +11,7 @@
             <li>Rename and safe delete refactorings</li>
             <li>Structure view and navigation bar</li>
             <li>Line and block commenting</li>
+            <li>Code folding</li>
             <li>Brace matching and quote auto-closing</li>
             <li>Code formatter</li>
         </ul>
@@ -36,6 +37,8 @@
         <colorSettingsPage implementation="de.paulmethfessel.lezer.highlighting.LezerColorSettingsPage"/>
         <lang.commenter language="Lezer"
                         implementationClass="de.paulmethfessel.lezer.editor.LezerCommenter"/>
+        <lang.foldingBuilder language="Lezer"
+                             implementationClass="de.paulmethfessel.lezer.editor.LezerFoldingBuilder"/>
         <lang.braceMatcher language="Lezer"
                            implementationClass="de.paulmethfessel.lezer.editor.LezerBraceMatcher"/>
         <lang.quoteHandler language="Lezer"
