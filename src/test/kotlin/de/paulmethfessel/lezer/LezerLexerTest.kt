@@ -12,113 +12,113 @@ class LezerLexerTest : LexerTestCase() {
     fun testComments() = doTest(
         "// line\n/* block\n */ /* unterminated",
         """
-        LezerTokenType.LINE_COMMENT ('// line')
+        line comment ('// line')
         WHITE_SPACE ('\n')
-        LezerTokenType.BLOCK_COMMENT ('/* block\n */')
+        block comment ('/* block\n */')
         WHITE_SPACE (' ')
-        LezerTokenType.BLOCK_COMMENT ('/* unterminated')
+        block comment ('/* unterminated')
         """.trimIndent(),
     )
 
     fun testStrings() = doTest(
         """"a\"b" 'c\'d' "open""",
         """
-        LezerTokenType.STRING ('"a\"b"')
+        string ('"a\"b"')
         WHITE_SPACE (' ')
-        LezerTokenType.STRING (''c\'d'')
+        string (''c\'d'')
         WHITE_SPACE (' ')
-        LezerTokenType.STRING ('"open')
+        string ('"open')
         """.trimIndent(),
     )
 
     fun testUnterminatedStringEndsAtLineEnd() = doTest(
         "\"open\nName",
         """
-        LezerTokenType.STRING ('"open')
+        string ('"open')
         WHITE_SPACE ('\n')
-        LezerTokenType.NAME ('Name')
+        identifier ('Name')
         """.trimIndent(),
     )
 
     fun testCharSets() = doTest(
         """$[a-z\]] ![\n"] !prec""",
         """
-        LezerTokenType.CHAR_SET ('$[a-z\]]')
+        character set ('$[a-z\]]')
         WHITE_SPACE (' ')
-        LezerTokenType.INVERTED_CHAR_SET ('![\n"]')
+        inverted character set ('![\n"]')
         WHITE_SPACE (' ')
-        LezerTokenType.! ('!')
-        LezerTokenType.NAME ('prec')
+        ! ('!')
+        identifier ('prec')
         """.trimIndent(),
     )
 
     fun testAtKeywords() = doTest(
         "@top @tokens @topLevel @digit @eof @name @specialize",
         """
-        LezerTokenType.@top ('@top')
+        @top ('@top')
         WHITE_SPACE (' ')
-        LezerTokenType.@tokens ('@tokens')
+        @tokens ('@tokens')
         WHITE_SPACE (' ')
-        LezerTokenType.AT_NAME ('@topLevel')
+        pseudo prop name ('@topLevel')
         WHITE_SPACE (' ')
-        LezerTokenType.CHAR_CLASS ('@digit')
+        character class ('@digit')
         WHITE_SPACE (' ')
-        LezerTokenType.CHAR_CLASS ('@eof')
+        character class ('@eof')
         WHITE_SPACE (' ')
-        LezerTokenType.AT_NAME ('@name')
+        pseudo prop name ('@name')
         WHITE_SPACE (' ')
-        LezerTokenType.@specialize ('@specialize')
+        @specialize ('@specialize')
         """.trimIndent(),
     )
 
     fun testNamesAndContextualKeywords() = doTest(
         "from fromage _ _x kebab-name Ünïcode",
         """
-        LezerTokenType.from ('from')
+        from ('from')
         WHITE_SPACE (' ')
-        LezerTokenType.NAME ('fromage')
+        identifier ('fromage')
         WHITE_SPACE (' ')
-        LezerTokenType._ ('_')
+        _ ('_')
         WHITE_SPACE (' ')
-        LezerTokenType.NAME ('_x')
+        identifier ('_x')
         WHITE_SPACE (' ')
-        LezerTokenType.NAME ('kebab-name')
+        identifier ('kebab-name')
         WHITE_SPACE (' ')
-        LezerTokenType.NAME ('Ünïcode')
+        identifier ('Ünïcode')
         """.trimIndent(),
     )
 
     fun testRuleWithProps() = doTest(
         "A[@name=x]<p>{p+ | ~amb b?}",
         """
-        LezerTokenType.NAME ('A')
-        LezerTokenType.[ ('[')
-        LezerTokenType.AT_NAME ('@name')
-        LezerTokenType.= ('=')
-        LezerTokenType.NAME ('x')
-        LezerTokenType.] (']')
-        LezerTokenType.< ('<')
-        LezerTokenType.NAME ('p')
-        LezerTokenType.> ('>')
-        LezerTokenType.{ ('{')
-        LezerTokenType.NAME ('p')
-        LezerTokenType.+ ('+')
+        identifier ('A')
+        [ ('[')
+        pseudo prop name ('@name')
+        = ('=')
+        identifier ('x')
+        ] (']')
+        < ('<')
+        identifier ('p')
+        > ('>')
+        { ('{')
+        identifier ('p')
+        + ('+')
         WHITE_SPACE (' ')
-        LezerTokenType.| ('|')
+        | ('|')
         WHITE_SPACE (' ')
-        LezerTokenType.~ ('~')
-        LezerTokenType.NAME ('amb')
+        ~ ('~')
+        identifier ('amb')
         WHITE_SPACE (' ')
-        LezerTokenType.NAME ('b')
-        LezerTokenType.? ('?')
-        LezerTokenType.} ('}')
+        identifier ('b')
+        ? ('?')
+        } ('}')
         """.trimIndent(),
     )
 
     fun testBadCharacters() = doTest(
         "a # @",
         """
-        LezerTokenType.NAME ('a')
+        identifier ('a')
         WHITE_SPACE (' ')
         BAD_CHARACTER ('#')
         WHITE_SPACE (' ')

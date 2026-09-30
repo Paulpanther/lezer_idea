@@ -9,3 +9,7 @@ Broken { a , b }
 }
 
 Fine { x }
+
+@precedence { a @left b, $ }
+
+Weird { "x" } @bogus

@@ -29,6 +29,9 @@
                                        implementationClass="de.paulmethfessel.lezer.highlighting.LezerSyntaxHighlighterFactory"/>
         <annotator language="Lezer"
                    implementationClass="de.paulmethfessel.lezer.highlighting.LezerHighlightingAnnotator"/>
+        <annotator language="Lezer"
+                   implementationClass="de.paulmethfessel.lezer.annotator.LezerErrorAnnotator"/>
+        <highlightErrorFilter implementation="de.paulmethfessel.lezer.annotator.LezerHighlightErrorFilter"/>
         <colorSettingsPage implementation="de.paulmethfessel.lezer.highlighting.LezerColorSettingsPage"/>
         <lang.commenter language="Lezer"
                         implementationClass="de.paulmethfessel.lezer.editor.LezerCommenter"/>

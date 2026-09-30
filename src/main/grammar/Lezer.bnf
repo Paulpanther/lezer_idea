@@ -74,6 +74,8 @@
   ]
 
   extends(".*Expression")=expression
+  // Display names in parser error messages
+  name(".*Expression")="expression"
 
   // Declarations: named elements that can be referenced, renamed, shown in the structure view, ...
   implements("ruleDeclaration|topRuleDeclaration|inlineRuleExpression|externalToken|elseToken|precedence|dialect|parameter|externalTokensDeclaration|externalPropDeclaration|externalPropSourceDeclaration|externalSpecializeDeclaration|contextDeclaration")="de.paulmethfessel.lezer.psi.LezerNamedElement"

@@ -12,3 +12,4 @@
 - References with go to declaration, completion and find usages
 - Rename and safe delete refactorings
 - Structure view and navigation bar
+- Readable syntax error messages, errors for unterminated literals and unexpected characters
