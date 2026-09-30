@@ -1,0 +1,19 @@
+@precedence {times   @left,plus @left , call}
+@dialects{ts,jsx}
+@top   Program{expression*}
+expression [ @isGroup = Expression , @dialect=ts ] < a,b > {Number|BinaryExpression{expression!times"*"expression}|( a|b ) ~amb|x . y|kw < "a" >|e * ? +}
+kw<term>{@specialize [ @name={term} ] < Identifier , term >}
+pp[@name="#" {name}]<name> {"#"name}
+empty{}
+@skip{space}{ Comment{"/*"} }
+@external tokens  insertSemi   from"./tokens"{InsertSemi , Other[@name=X]}
+@external prop   foo   as  bar  from  "./props"
+@context   tracker   from"./ctx"
+@tokens{
+  Number{ @digit+ }
+  @precedence{Number,"x"}
+  @conflict{ Number , Identifier }
+  "("   ")"
+}
+@local   tokens{ @else   Text [ @name=T ] }
+@detectDelim

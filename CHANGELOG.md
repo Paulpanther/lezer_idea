@@ -13,3 +13,4 @@
 - Rename and safe delete refactorings
 - Structure view and navigation bar
 - Readable syntax error messages, errors for unterminated literals and unexpected characters
+- Code formatter with configurable code style

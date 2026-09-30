@@ -1,0 +1,15 @@
+// Leading comment
+@top Program { expression* }   // Trailing comment
+
+
+/* Block comment */
+expression {
+// Comment in body
+      Number |  /* inline */ String
+  // Before closing brace
+}
+
+@tokens {
+    // Comment in tokens
+  Number { @digit+ }  // After token
+}

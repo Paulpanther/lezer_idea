@@ -11,6 +11,7 @@ Language support for [Lezer](https://lezer.codemirror.net/) grammar files (`*.gr
 - Rename (in place) and safe delete
 - Structure view and navigation bar
 - Line/block commenting, brace matching, quote auto-closing
+- Code formatter (Reformat Code) with configurable indentation and spacing
 
 ## Development
 

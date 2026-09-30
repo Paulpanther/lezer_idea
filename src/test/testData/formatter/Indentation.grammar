@@ -1,0 +1,52 @@
+@precedence {
+times @left,
+      plus @left
+    }
+
+statement {
+ExportDeclaration |
+      IfStatement {
+  kw<"if"> expression
+statement
+      } |
+  ImportDeclaration {
+      kw<"import"> commaSep<VariableDefinition>
+  ckw<"from"> String |
+kw<"import"> String
+    }
+}
+
+UnaryExpression {
+      !prefix (kw<"void"> | kw<"typeof"> |
+  LogicOp<"!"> | incdec)
+ expressionNoComma
+}
+
+ForSpec {
+      "("
+  (VariableDeclaration | ";") expression?
+")"
+}
+
+nested {
+  (
+  a |
+      b
+    )
+}
+
+@tokens {
+Number {
+@digit+
+}
+
+  @precedence {
+Number,
+    "x"
+  }
+}
+
+@external tokens insertSemi from "./tokens" {
+InsertSemi,
+      Other
+}

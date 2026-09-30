@@ -12,6 +12,7 @@
             <li>Structure view and navigation bar</li>
             <li>Line and block commenting</li>
             <li>Brace matching and quote auto-closing</li>
+            <li>Code formatter</li>
         </ul>
     ]]></description>
 
@@ -48,5 +49,9 @@
         <lang.psiStructureViewFactory language="Lezer"
                                       implementationClass="de.paulmethfessel.lezer.structure.LezerStructureViewFactory"/>
         <navbar implementation="de.paulmethfessel.lezer.structure.LezerNavBarModelExtension"/>
+        <lang.formatter language="Lezer"
+                        implementationClass="de.paulmethfessel.lezer.formatter.LezerFormattingModelBuilder"/>
+        <langCodeStyleSettingsProvider
+                implementation="de.paulmethfessel.lezer.formatter.LezerLanguageCodeStyleSettingsProvider"/>
     </extensions>
 </idea-plugin>
