@@ -22,7 +22,8 @@ object LezerColors {
     val TERM = key("LEZER_TERM", Default.INSTANCE_FIELD)
     val TOKEN = key("LEZER_TOKEN", Default.STRING)
     val TEMPLATE_DECLARATION = key("LEZER_TEMPLATE_DECLARATION", Default.FUNCTION_DECLARATION)
-    val TEMPLATE_CALL = key("LEZER_TEMPLATE_CALL", Default.FUNCTION_CALL)
+    // Default.FUNCTION_CALL is uncolored in the bundled schemes, so inherit the declaration color instead
+    val TEMPLATE_CALL = key("LEZER_TEMPLATE_CALL", TEMPLATE_DECLARATION)
     val PRECEDENCE_NAME = key("LEZER_PRECEDENCE_NAME", Default.LABEL)
     val PROP_NAME = key("LEZER_PROP_NAME", Default.METADATA)
     val PSEUDO_PROP_NAME = key("LEZER_PSEUDO_PROP_NAME", Default.METADATA)
