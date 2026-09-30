@@ -11,6 +11,9 @@ Language support for [Lezer](https://lezer.codemirror.net/) grammar files (`*.gr
 - Rename (in place) and safe delete
 - Structure view and navigation bar
 - Line/block commenting, brace matching, quote auto-closing, code folding (blocks, comments, `// region`)
+- Quick documentation (F1 / Ctrl+Q): comments directly before a declaration are its documentation (Markdown), shown with
+  its signature, kind and the node it creates. Keywords, pseudo-props (`@name`, …), character classes and built-in props
+  have short descriptions with links to the [Lezer guide](https://lezer.codemirror.net/docs/guide/)
 - Errors and warnings of [`@lezer/generator`](https://github.com/lezer-parser/generator) (unused rules, conflicts, …) while typing
 - *Lezer Generator* run configuration with all generator options, started from the gutter icon on `@top`
 - Uses a local (`npm i -D @lezer/generator`) or global installation and offers to install it, configurable under

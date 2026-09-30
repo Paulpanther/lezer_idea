@@ -12,6 +12,7 @@
             <li>Structure view and navigation bar</li>
             <li>Line and block commenting</li>
             <li>Code folding</li>
+            <li>Quick documentation: comments before declarations, and short docs with guide links for keywords and built-ins</li>
             <li>Errors and warnings of <a href="https://github.com/lezer-parser/generator">@lezer/generator</a> while typing</li>
             <li>Run configuration to generate the parser, with a gutter icon on <code>@top</code></li>
             <li>Brace matching and quote auto-closing</li>
@@ -53,6 +54,8 @@
                            implementationClass="de.paulmethfessel.lezer.editor.LezerBraceMatcher"/>
         <lang.quoteHandler language="Lezer"
                            implementationClass="de.paulmethfessel.lezer.editor.LezerQuoteHandler"/>
+        <lang.documentationProvider language="Lezer"
+                                    implementationClass="de.paulmethfessel.lezer.documentation.LezerDocumentationProvider"/>
         <lang.findUsagesProvider language="Lezer"
                                  implementationClass="de.paulmethfessel.lezer.findUsages.LezerFindUsagesProvider"/>
         <lang.refactoringSupport language="Lezer"

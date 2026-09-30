@@ -15,3 +15,4 @@
 - Readable syntax error messages, errors for unterminated literals and unexpected characters
 - Code formatter with configurable code style
 - lezer-generator integration: live errors and warnings, run configuration with gutter icon, installation banner and settings
+- Quick documentation for declarations (from preceding comments) and for keywords and built-ins, with links to the Lezer guide
