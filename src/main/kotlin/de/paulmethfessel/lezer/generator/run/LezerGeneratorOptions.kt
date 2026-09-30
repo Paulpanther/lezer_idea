@@ -33,6 +33,9 @@ class LezerGeneratorOptions : LocatableRunConfigurationOptions() {
     /** Relative paths are resolved against it, the grammar's directory by default. */
     var workingDirectory by string()
 
+    /** Runs the configuration in the background whenever the grammar file is saved. */
+    var generateOnSave by property(false)
+
     @get:Transient
     var generatorMode: GeneratorMode?
         get() = generator?.let { name -> GeneratorMode.entries.find { it.name == name } }

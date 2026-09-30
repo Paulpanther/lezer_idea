@@ -1,6 +1,5 @@
 package de.paulmethfessel.lezer.generator
 
-import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.execution.ExecutionException
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.ExternalAnnotator
@@ -51,7 +50,10 @@ class LezerGeneratorAnnotator : ExternalAnnotator<LezerGeneratorAnnotator.Input,
     override fun apply(file: PsiFile, report: GeneratorReport, holder: AnnotationHolder) {
         val document = PsiDocumentManager.getInstance(file.project).getDocument(file) ?: return
         report.errors.forEach { annotate(file, document, GeneratorMessage.parse(it), HighlightSeverity.ERROR, holder) }
-        report.warnings.forEach { annotate(file, document, GeneratorMessage.parse(it), HighlightSeverity.WARNING, holder) }
+        report.warnings.map(GeneratorMessage::parse)
+            // Reported by LezerUnusedDeclarationInspection, which works without the generator and has a quick fix
+            .filterNot { it.isUnusedRule }
+            .forEach { annotate(file, document, it, HighlightSeverity.WARNING, holder) }
         report.failure?.let {
             holder.newAnnotation(HighlightSeverity.WARNING, "lezer-generator failed: ${it.lineSequence().first()}")
                 .tooltip(pre(it))
@@ -80,10 +82,7 @@ class LezerGeneratorAnnotator : ExternalAnnotator<LezerGeneratorAnnotator.Input,
             }
             return
         }
-        val builder = holder.newAnnotation(severity, message.summary).tooltip(pre(message.text))
-        builder.range(range)
-        if (message.isUnusedRule) builder.highlightType(ProblemHighlightType.LIKE_UNUSED_SYMBOL)
-        builder.create()
+        holder.newAnnotation(severity, message.summary).tooltip(pre(message.text)).range(range).create()
     }
 
     /** The name or token at the offset. */

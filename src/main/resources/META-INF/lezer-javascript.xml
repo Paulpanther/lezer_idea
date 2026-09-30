@@ -3,4 +3,8 @@
     <extensions defaultExtensionNs="de.paulmethfessel.lezer">
         <nodeInterpreterProvider implementation="de.paulmethfessel.lezer.generator.JavaScriptNodeInterpreterProvider"/>
     </extensions>
+    <extensions defaultExtensionNs="com.intellij">
+        <gotoDeclarationHandler implementation="de.paulmethfessel.lezer.javascript.LezerJsGotoDeclarationHandler"/>
+        <referencesSearch implementation="de.paulmethfessel.lezer.javascript.LezerJsReferencesSearcher"/>
+    </extensions>
 </idea-plugin>

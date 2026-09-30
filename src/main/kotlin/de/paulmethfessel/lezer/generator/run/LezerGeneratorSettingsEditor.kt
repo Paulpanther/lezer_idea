@@ -37,6 +37,7 @@ class LezerGeneratorSettingsEditor(private val project: Project) : SettingsEdito
     private val includeNames = JBCheckBox("Include node names for debugging (--names)")
     private val noTerms = JBCheckBox("Don't write the terms file (--noTerms)")
     private val exportName = JBTextField()
+    private val generateOnSave = JBCheckBox("Regenerate in the background when the grammar is saved")
 
     private val generator = GeneratorSelector(project, projectDefault = true) {
         grammarFile.text.takeIf { it.isNotBlank() }?.let { LocalFileSystem.getInstance().findFileByNioFile(Path(it)) }
@@ -56,6 +57,7 @@ class LezerGeneratorSettingsEditor(private val project: Project) : SettingsEdito
         row("Working directory:") {
             cell(workingDirectory).align(AlignX.FILL).comment("Relative paths are resolved against it. Defaults to the grammar's directory.")
         }
+        row { cell(generateOnSave).comment("Errors are shown as notifications, the output doesn't open the Run tool window.") }
         group("lezer-generator") { generator.addTo(this) }
     }
 
@@ -65,6 +67,7 @@ class LezerGeneratorSettingsEditor(private val project: Project) : SettingsEdito
         outputFile.text = options.outputFile.orEmpty()
         workingDirectory.text = options.workingDirectory.orEmpty()
         cjs.isSelected = options.cjs
+        generateOnSave.isSelected = options.generateOnSave
         typeScript.isSelected = options.typeScript
         includeNames.isSelected = options.includeNames
         noTerms.isSelected = options.noTerms
@@ -79,6 +82,7 @@ class LezerGeneratorSettingsEditor(private val project: Project) : SettingsEdito
         options.outputFile = outputFile.text.trim().ifEmpty { null }
         options.workingDirectory = workingDirectory.text.trim().ifEmpty { null }
         options.cjs = cjs.isSelected
+        options.generateOnSave = generateOnSave.isSelected
         options.typeScript = typeScript.isSelected
         options.includeNames = includeNames.isSelected
         options.noTerms = noTerms.isSelected

@@ -14,7 +14,9 @@
             <li>Code folding</li>
             <li>Quick documentation: comments before declarations, and short docs with guide links for keywords and built-ins</li>
             <li>Errors and warnings of <a href="https://github.com/lezer-parser/generator">@lezer/generator</a> while typing</li>
-            <li>Run configuration to generate the parser, with a gutter icon on <code>@top</code></li>
+            <li>Run configuration to generate the parser, with a gutter icon on <code>@top</code> and optional generation on save</li>
+            <li>Unused rule and token inspection with a quick fix, keyword completion, precedence inlay hints</li>
+            <li>With the JavaScript plugin: navigation and find usages from <code>styleTags</code> keys and terms imports to the grammar</li>
             <li>Brace matching and quote auto-closing</li>
             <li>Code formatter</li>
         </ul>
@@ -23,6 +25,11 @@
     <depends>com.intellij.modules.platform</depends>
     <!-- Uses the Node.js interpreter configured for the project, if available -->
     <depends optional="true" config-file="lezer-javascript.xml">JavaScript</depends>
+
+    <applicationListeners>
+        <listener class="de.paulmethfessel.lezer.generator.run.GenerateOnSaveListener"
+                  topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+    </applicationListeners>
 
     <extensionPoints>
         <extensionPoint qualifiedName="de.paulmethfessel.lezer.nodeInterpreterProvider"
@@ -56,6 +63,18 @@
                            implementationClass="de.paulmethfessel.lezer.editor.LezerQuoteHandler"/>
         <lang.documentationProvider language="Lezer"
                                     implementationClass="de.paulmethfessel.lezer.documentation.LezerDocumentationProvider"/>
+        <localInspection language="Lezer" shortName="LezerUnusedDeclaration" displayName="Unused rule or token"
+                         groupName="Lezer" enabledByDefault="true" level="WARNING"
+                         implementationClass="de.paulmethfessel.lezer.inspections.LezerUnusedDeclarationInspection"/>
+        <completion.contributor language="Lezer"
+                                implementationClass="de.paulmethfessel.lezer.completion.LezerKeywordCompletionContributor"/>
+        <codeInsight.declarativeInlayProvider language="Lezer"
+                                              implementationClass="de.paulmethfessel.lezer.hints.LezerPrecedenceInlayHintsProvider"
+                                              isEnabledByDefault="true" group="VALUES_GROUP" providerId="lezer.precedence"
+                                              bundle="messages.LezerBundle" nameKey="inlay.precedence.name"
+                                              descriptionKey="inlay.precedence.description"/>
+        <renamePsiElementProcessor implementation="de.paulmethfessel.lezer.refactoring.LezerRenamePsiElementProcessor"
+                                   order="first"/>
         <lang.findUsagesProvider language="Lezer"
                                  implementationClass="de.paulmethfessel.lezer.findUsages.LezerFindUsagesProvider"/>
         <lang.refactoringSupport language="Lezer"

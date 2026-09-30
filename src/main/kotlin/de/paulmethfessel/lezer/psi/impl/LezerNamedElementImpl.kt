@@ -5,6 +5,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.navigation.ItemPresentation
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.LocalSearchScope
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.util.PsiTreeUtil
@@ -50,7 +51,9 @@ abstract class LezerNamedElementImpl(node: ASTNode) : ASTWrapperPsiElement(node)
             PsiTreeUtil.getParentOfType(this, LezerRuleDeclaration::class.java, LezerTopRuleDeclaration::class.java)
                 ?.let { return LocalSearchScope(it) }
         }
-        return LocalSearchScope(containingFile)
+        val file = LocalSearchScope(containingFile)
+        // Rules and tokens can also be used by code that uses the generated parser
+        return if (kind.isGlobalRule) file.union(GlobalSearchScope.projectScope(project)) else file
     }
 
     /** Also removes separating commas of list items and trailing whitespace, so the remaining code stays valid. */

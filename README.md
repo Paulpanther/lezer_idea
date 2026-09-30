@@ -8,6 +8,13 @@ Language support for [Lezer](https://lezer.codemirror.net/) grammar files (`*.gr
 
 - Syntax highlighting, configurable under *Settings | Editor | Color Scheme | Lezer Grammar*
 - Go to declaration, find usages and completion for rules, tokens, parameters, precedences, dialects and external props
+- Inspection for unused rules and tokens, with a quick fix that removes them (and their doc comment)
+- Keyword completion by context: declarations, `@precedence`/`@conflict`/`@else` in token blocks, character classes,
+  `@specialize`/`@extend`, associativities, pseudo-props and the words of `@external`/`@local` declarations
+- Inlay hints with the rank and associativity of precedences after markers like `!times`
+- With the JavaScript plugin: go to declaration and find usages from JS/TS code to the grammar, for node names in
+  `styleTags({...})` keys and names imported from the generated `*.terms.js` file. Renaming a rule doesn't change the code,
+  it refers to the generated parser
 - Rename (in place) and safe delete
 - Structure view and navigation bar
 - Line/block commenting, brace matching, quote auto-closing, code folding (blocks, comments, `// region`)
@@ -15,7 +22,8 @@ Language support for [Lezer](https://lezer.codemirror.net/) grammar files (`*.gr
   its signature, kind and the node it creates. Keywords, pseudo-props (`@name`, …), character classes and built-in props
   have short descriptions with links to the [Lezer guide](https://lezer.codemirror.net/docs/guide/)
 - Errors and warnings of [`@lezer/generator`](https://github.com/lezer-parser/generator) (unused rules, conflicts, …) while typing
-- *Lezer Generator* run configuration with all generator options, started from the gutter icon on `@top`
+- *Lezer Generator* run configuration with all generator options, started from the gutter icon on `@top`,
+  optionally regenerating the parser in the background whenever the grammar is saved
 - Uses a local (`npm i -D @lezer/generator`) or global installation and offers to install it, configurable under
   *Settings | Languages & Frameworks | Lezer Grammar*. Node.js is taken from the JavaScript plugin's settings if available,
   otherwise it is detected automatically

@@ -1,7 +1,11 @@
 package de.paulmethfessel.lezer.generator
 
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
+import com.intellij.execution.RunManager
 import com.intellij.execution.actions.ConfigurationContext
+import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -93,7 +97,8 @@ class LezerGeneratorIntegrationTest : BasePlatformTestCase() {
         settings.customGeneratorPath = generatorDir
 
         // The generator stops at the first error, so warnings are only reported for grammars without errors
-        assertContainsElements(highlight("@top P { a }\na { \"x\" }\nunused { \"y\" }\n"), "WARNING unused: Unused rule 'unused'")
+        // Unused rules are reported by LezerUnusedDeclarationInspection instead, with a quick fix
+        assertEmpty(highlight("@top P { a }\na { \"x\" }\nunused { \"y\" }\n").filter { "Unused rule" in it })
         assertContainsElements(highlight("@top P { a b }\na { \"x\" }\n"), "ERROR b: Reference to undefined rule 'b'")
 
         // Conflicts have no position, the conflicting symbol is found in the grammar instead
@@ -127,6 +132,41 @@ class LezerGeneratorIntegrationTest : BasePlatformTestCase() {
         assertEquals(output.stderr, 0, output.exitCode)
         assertTrue(Files.isRegularFile(dir.resolve("out/parser.ts")))
         assertTrue(Files.isRegularFile(dir.resolve("out/parser.terms.ts")))
+    }
+
+    /** Needs node and a generator package, see [testLiveErrors]. */
+    fun testGenerateOnSave() {
+        val generatorDir = System.getenv("LEZER_GENERATOR_DIR") ?: return
+        if (NodeLocator.find(project) == null) return
+        val dir = Files.createTempDirectory("lezer")
+        val grammarPath = dir.resolve("lang.grammar").apply { writeText("@top P { \"x\" }") }
+        val grammar = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(grammarPath)!!
+
+        val runManager = RunManager.getInstance(project)
+        val settings = runManager.createConfiguration("Generate lang.grammar", LezerGeneratorConfigurationType.getInstance())
+        (settings.configuration as LezerGeneratorRunConfiguration).options.apply {
+            grammarFile = grammarPath.toString()
+            outputFile = "parser"
+            generatorMode = GeneratorMode.CUSTOM
+            customGeneratorPath = generatorDir
+            generateOnSave = true
+        }
+        runManager.addConfiguration(settings)
+        try {
+            val document = FileDocumentManager.getInstance().getDocument(grammar)!!
+            WriteCommandAction.runWriteCommandAction(project) { document.setText("@top P { \"y\" }") }
+            FileDocumentManager.getInstance().saveDocument(document)
+
+            val parser = dir.resolve("parser.js")
+            val deadline = System.currentTimeMillis() + 30_000
+            while (!Files.isRegularFile(parser) && System.currentTimeMillis() < deadline) {
+                PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+                Thread.sleep(50)
+            }
+            assertTrue("parser.js was not generated", Files.isRegularFile(parser))
+        } finally {
+            runManager.removeConfiguration(settings)
+        }
     }
 
     private fun highlight(text: String): List<String> {

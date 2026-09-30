@@ -74,12 +74,12 @@ class LezerGeneratorRunConfiguration(project: Project, factory: ConfigurationFac
         return GeneratorLocator.resolve(project, file, mode, options.customGeneratorPath)
     }
 
-    private fun refreshOutput() {
+    fun refreshOutput() {
         val files = GeneratorArguments.outputFiles(options).map { resolve(it) }
         if (files.isNotEmpty()) LocalFileSystem.getInstance().refreshNioFiles(files, true, false, null)
     }
 
-    private fun grammarVirtualFile(): VirtualFile? =
+    fun grammarVirtualFile(): VirtualFile? =
         options.grammarFile?.takeIf { it.isNotBlank() }?.let { LocalFileSystem.getInstance().findFileByNioFile(resolve(it)) }
 
     /** The configured directory, otherwise the grammar's directory, otherwise the project directory. */

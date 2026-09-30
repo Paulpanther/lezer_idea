@@ -37,6 +37,9 @@ object LezerResolver {
 
     fun resolve(element: PsiElement): LezerNamedElement? = candidates(element).firstOrNull { it.name == element.text }
 
+    /** The rules and tokens of the file that can be referenced by name, also from code using the generated parser. */
+    fun globalRules(file: LezerFile): List<LezerNamedElement> = declarations(file).rules
+
     /** All declarations that are visible at the position of the reference [element]. */
     fun candidates(element: PsiElement): List<LezerNamedElement> {
         val file = element.containingFile as? LezerFile ?: return emptyList()
