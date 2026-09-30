@@ -96,6 +96,12 @@ class LezerGeneratorIntegrationTest : BasePlatformTestCase() {
         assertContainsElements(highlight("@top P { a }\na { \"x\" }\nunused { \"y\" }\n"), "WARNING unused: Unused rule 'unused'")
         assertContainsElements(highlight("@top P { a b }\na { \"x\" }\n"), "ERROR b: Reference to undefined rule 'b'")
 
+        // Conflicts have no position, the conflicting symbol is found in the grammar instead
+        assertContainsElements(
+            highlight("@top P { e }\ne { e \"+\" e | \"x\" }\n"),
+            "ERROR \"+\": Shift/reduce conflict between 'e -> e · \"+\" e' and 'e -> e \"+\" e'",
+        )
+
         settings.liveErrors = false
         assertEmpty(highlight("@top P { a b }\na { \"x\" }\n").filter { it.startsWith("ERROR") })
     }

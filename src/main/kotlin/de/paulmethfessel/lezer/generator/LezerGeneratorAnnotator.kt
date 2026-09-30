@@ -67,12 +67,20 @@ class LezerGeneratorAnnotator : ExternalAnnotator<LezerGeneratorAnnotator.Input,
         severity: HighlightSeverity,
         holder: AnnotationHolder,
     ) {
-        val builder = holder.newAnnotation(severity, message.summary).tooltip(pre(message.text))
         val range = message.offset(document)?.let { range(file, it) }
         if (range == null) {
-            builder.fileLevel().create()
+            // Conflicts have no position, but their productions can be found in the grammar
+            val conflict = ConflictLocator.locate(file, message.text)
+            if (conflict != null) {
+                for (conflictRange in conflict.ranges) {
+                    holder.newAnnotation(severity, conflict.description).tooltip(pre(message.text)).range(conflictRange).create()
+                }
+            } else {
+                holder.newAnnotation(severity, message.summary).tooltip(pre(message.text)).fileLevel().create()
+            }
             return
         }
+        val builder = holder.newAnnotation(severity, message.summary).tooltip(pre(message.text))
         builder.range(range)
         if (message.isUnusedRule) builder.highlightType(ProblemHighlightType.LIKE_UNUSED_SYMBOL)
         builder.create()
