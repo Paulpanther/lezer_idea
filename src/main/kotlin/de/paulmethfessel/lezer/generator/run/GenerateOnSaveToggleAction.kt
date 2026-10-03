@@ -5,6 +5,7 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.ex.CheckboxAction
+import com.intellij.openapi.editor.EditorKind
 import com.intellij.openapi.vfs.VirtualFile
 import de.paulmethfessel.lezer.LezerFileType
 
@@ -21,7 +22,10 @@ class GenerateOnSaveToggleAction : CheckboxAction(
 
     override fun update(e: AnActionEvent) {
         super.update(e)
-        e.presentation.isEnabledAndVisible = e.project != null && grammar(e) != null
+        // Only in grammar editors, not in diffs or the playground, see GenerateOnSaveFloatingToolbarProvider
+        val editor = e.getData(CommonDataKeys.EDITOR)
+        val mainEditor = editor == null || editor.editorKind == EditorKind.MAIN_EDITOR
+        e.presentation.isEnabledAndVisible = e.project != null && grammar(e) != null && mainEditor
     }
 
     override fun isSelected(e: AnActionEvent): Boolean {
