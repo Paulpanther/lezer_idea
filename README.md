@@ -28,7 +28,8 @@ Language support for [Lezer](https://lezer.codemirror.net/) grammar files (`*.gr
   `@top` rules and dialects can be chosen in the toolbar. `@external` implementations are imported from the modules
   named in the grammar
 - *Lezer Generator* run configuration with all generator options, started from the gutter icon on `@top`,
-  optionally regenerating the parser in the background whenever the grammar is saved
+  optionally regenerating the parser in the background whenever the grammar is saved. Toggle this with the
+  *Regenerate on save* checkbox that floats in the top right corner of the grammar editor when you hover over it
 - Uses a local (`npm i -D @lezer/generator`) or global installation and offers to install it, configurable under
   *Settings | Languages & Frameworks | Lezer Grammar*. Node.js is taken from the JavaScript plugin's settings if available,
   otherwise it is detected automatically
@@ -54,7 +55,8 @@ Language support for [Lezer](https://lezer.codemirror.net/) grammar files (`*.gr
 without errors.
 
 The tests that run the real generator are skipped unless `LEZER_GENERATOR_DIR` points to an installed
-`@lezer/generator` package (and Node.js is found):
+`@lezer/generator` package (and Node.js is found). On CI (when `CI` is set) they fail instead of being skipped, the
+build workflow installs both:
 
 ```sh
 npm i --prefix /tmp/lezer @lezer/generator

@@ -5,6 +5,7 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
+import com.intellij.psi.impl.source.resolve.ResolveCache
 import de.paulmethfessel.lezer.psi.LezerArgList
 import de.paulmethfessel.lezer.psi.LezerElementFactory
 import de.paulmethfessel.lezer.psi.LezerNameExpression
@@ -13,7 +14,8 @@ import de.paulmethfessel.lezer.psi.LezerNamedElement
 class LezerReference private constructor(element: PsiElement, soft: Boolean) :
     PsiReferenceBase<PsiElement>(element, TextRange(0, element.textLength), soft) {
 
-    override fun resolve(): LezerNamedElement? = LezerResolver.resolve(element)
+    override fun resolve(): LezerNamedElement? =
+        ResolveCache.getInstance(element.project).resolveWithCaching(this, RESOLVER, false, false)
 
     override fun getVariants(): Array<Any> {
         val declarations = LezerResolver.candidates(element)
@@ -39,6 +41,10 @@ class LezerReference private constructor(element: PsiElement, soft: Boolean) :
     }
 
     companion object {
+        private val RESOLVER = ResolveCache.AbstractResolver<LezerReference, LezerNamedElement> { reference, _ ->
+            LezerResolver.resolveUncached(reference.element)
+        }
+
         fun create(element: PsiElement): LezerReference? {
             val namespace = LezerResolver.namespaceOf(element) ?: return null
             // Props like `closedBy` are defined by @lezer/common without a declaration in the grammar

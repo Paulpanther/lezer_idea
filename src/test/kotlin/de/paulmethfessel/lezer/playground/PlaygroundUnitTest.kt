@@ -2,6 +2,7 @@ package de.paulmethfessel.lezer.playground
 
 import com.google.gson.Gson
 import junit.framework.TestCase
+import kotlin.io.path.Path
 
 class PlaygroundUnitTest : TestCase() {
     fun testDeepestAt() {
@@ -20,12 +21,33 @@ class PlaygroundUnitTest : TestCase() {
     }
 
     fun testResultJson() {
-        val result = Gson().fromJson(
+        val result = PlaygroundResult.parse(
+            Gson(),
             """{"id":3,"tree":{"n":"P","f":0,"t":1,"c":[{"n":"⚠","f":1,"t":1,"e":true}]},"moduleErrors":["x"],"truncated":false,"ms":5}""",
-            PlaygroundResult::class.java,
         )
         assertEquals(3L, result.id)
         assertTrue(result.tree!!.childList.single().isError)
         assertEquals(listOf("x"), result.moduleErrors)
+    }
+
+    fun testResultJsonWithMissingProperties() {
+        val result = PlaygroundResult.parse(Gson(), """{"id":1}""")
+        assertEquals(1L, result.id)
+        assertNull(result.tree)
+        assertEquals(emptyList<String>(), result.moduleErrors)
+        assertFalse(result.truncated)
+    }
+
+    fun testModuleChangesThatRestartTheWorker() {
+        val loaded = setOf(Path("/p/src/tokens.js"), Path("/p/node_modules/dep/index.js"))
+        val outputs = setOf(Path("/p/src/parser.js"), Path("/p/src/parser.terms.js"))
+        val restarts = { file: String -> PlaygroundModuleListener.needsRestart(Path(file), loaded, outputs) }
+        assertTrue(restarts("/p/src/tokens.js"))
+        // Could be imported by tokens.js
+        assertTrue(restarts("/p/src/util.ts"))
+        assertTrue(restarts("/p/node_modules/dep/index.js"))
+        assertFalse(restarts("/p/node_modules/other/index.js"))
+        assertFalse(restarts("/p/src/parser.js"))
+        assertFalse(restarts("/p/src/parser.terms.js"))
     }
 }

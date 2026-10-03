@@ -2,9 +2,9 @@ package de.paulmethfessel.lezer.refactoring
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
+import com.intellij.psi.search.LocalSearchScope
 import com.intellij.psi.search.SearchScope
 import com.intellij.refactoring.rename.RenamePsiElementProcessor
-import de.paulmethfessel.lezer.psi.LezerFile
 import de.paulmethfessel.lezer.psi.LezerNamedElement
 
 /**
@@ -18,6 +18,9 @@ class LezerRenamePsiElementProcessor : RenamePsiElementProcessor() {
         element: PsiElement,
         searchScope: SearchScope,
         searchInCommentsAndStrings: Boolean,
-    ): Collection<PsiReference> =
-        super.findReferences(element, searchScope, searchInCommentsAndStrings).filter { it.element.containingFile is LezerFile }
+    ): Collection<PsiReference> {
+        // Grammar names can only be referenced from their own file, so the project doesn't need to be searched
+        val grammar = LocalSearchScope(element.containingFile)
+        return super.findReferences(element, searchScope.intersectWith(grammar), searchInCommentsAndStrings)
+    }
 }

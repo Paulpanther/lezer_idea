@@ -66,6 +66,11 @@ class LezerDocumentationTest : BasePlatformTestCase() {
         assertContains(doc, "A string literal", "Token", "<code>String</code> (from <code>@name</code>)", "Declared in:", "@tokens", "#tokens")
     }
 
+    fun testQuotedNameProp() {
+        val doc = docAtCaret("@top P { lambda<caret>Params }\nlambdaParams[@name=\"ParamList\"] { \"x\" }")
+        assertContains(doc, "<code>ParamList</code> (from <code>@name</code>)")
+    }
+
     fun testTemplateAndParameter() {
         val template = docAtCaret("@top P { comma<caret>Sep<\"a\"> }\ncommaSep<item> { item (\",\" item)* }")
         assertContains(template, "Parameterized rule", "#template-rules")

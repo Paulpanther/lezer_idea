@@ -1,7 +1,6 @@
 package de.paulmethfessel.lezer.generator
 
 import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.execution.configurations.PathEnvironmentVariableUtil
 import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
@@ -28,13 +27,13 @@ interface LezerNodeInterpreterProvider {
     }
 }
 
-data class NodeInstallation(val node: Path, val source: String) {
+data class NodeInstallation(val node: Path) {
     /** npm next to node (as installed by node, nvm, Homebrew, ...), otherwise from the PATH. */
     val npm: Path?
         get() {
             val names = if (SystemInfo.isWindows) listOf("npm.cmd", "npm.exe") else listOf("npm")
             names.map { node.resolveSibling(it) }.firstOrNull { Files.isRegularFile(it) }?.let { return it }
-            return PathEnvironmentVariableUtil.findInPath(if (SystemInfo.isWindows) "npm.cmd" else "npm")?.toPath()
+            return NodeLocator.findInPath(if (SystemInfo.isWindows) "npm.cmd" else "npm")
         }
 
     /**
@@ -57,28 +56,36 @@ object NodeLocator {
     fun find(project: Project): NodeInstallation? {
         LezerSettings.getInstance(project).state.nodePath?.takeIf { it.isNotBlank() }?.let {
             val path = Path(it)
-            return if (Files.isRegularFile(path)) NodeInstallation(path, "settings") else null
+            return if (Files.isRegularFile(path)) NodeInstallation(path) else null
         }
         for (provider in LezerNodeInterpreterProvider.EP_NAME.extensionList) {
-            provider.findNode(project)?.let { return NodeInstallation(it, provider.sourceName) }
+            provider.findNode(project)?.let { return NodeInstallation(it) }
         }
-        return detect()?.let { NodeInstallation(it, "detected") }
+        return detect()?.let { NodeInstallation(it) }
     }
 
     /** Searches the PATH of the login shell, then locations used by common installers and version managers. */
     fun detect(): Path? {
-        PathEnvironmentVariableUtil.findInPath(executableName)?.let { return it.toPath() }
-        return candidateDirectories().map { it.resolve(executableName) }.firstOrNull { it.isExecutable() }
+        findInPath(executableName)?.let { return it }
+        return candidateDirectories(Path(System.getProperty("user.home")), System::getenv, SystemInfo.isWindows)
+            .map { it.resolve(executableName) }
+            .firstOrNull { it.isExecutable() }
     }
+
+    /** The executable [name] in a directory of the PATH, by default the one of the login shell. */
+    internal fun findInPath(name: String, path: String? = EnvironmentUtil.getValue("PATH")): Path? =
+        path.orEmpty().split(File.pathSeparatorChar).asSequence()
+            .filter { it.isNotBlank() }
+            .mapNotNull { dir -> runCatching { Path(dir).resolve(name) }.getOrNull() }
+            .firstOrNull { Files.isRegularFile(it) && it.isExecutable() }
 
     private val executableName get() = if (SystemInfo.isWindows) "node.exe" else "node"
 
-    private fun candidateDirectories(): List<Path> {
-        val home = Path(System.getProperty("user.home"))
+    internal fun candidateDirectories(home: Path, env: (String) -> String?, isWindows: Boolean): List<Path> {
         val dirs = mutableListOf<Path>()
-        if (SystemInfo.isWindows) {
-            System.getenv("ProgramFiles")?.let { dirs.add(Path(it, "nodejs")) }
-            System.getenv("APPDATA")?.let { dirs.addAll(newestVersion(Path(it, "nvm"))) }
+        if (isWindows) {
+            env("ProgramFiles")?.let { dirs.add(Path(it, "nodejs")) }
+            env("APPDATA")?.let { dirs.addAll(newestVersion(Path(it, "nvm"))) }
         } else {
             dirs.add(Path("/opt/homebrew/bin"))
             dirs.add(Path("/usr/local/bin"))
@@ -91,7 +98,7 @@ object NodeLocator {
     }
 
     /** Version directories like `v22.1.0`, newest first. */
-    private fun newestVersion(dir: Path): List<Path> {
+    internal fun newestVersion(dir: Path): List<Path> {
         if (!dir.isDirectory()) return emptyList()
         return dir.listDirectoryEntries()
             .filter { it.isDirectory() && it.name.removePrefix("v").firstOrNull()?.isDigit() == true }

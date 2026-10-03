@@ -1,15 +1,20 @@
 package de.paulmethfessel.lezer.completion
 
 import com.intellij.codeInsight.completion.CompletionContributor
+import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionResultSet
+import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.codeInsight.completion.InsertHandler
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.icons.AllIcons
+import com.intellij.patterns.PlatformPatterns.psiElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import com.intellij.util.ProcessingContext
+import de.paulmethfessel.lezer.LezerLanguage
 import de.paulmethfessel.lezer.psi.*
 
 /**
@@ -18,9 +23,15 @@ import de.paulmethfessel.lezer.psi.*
  * pseudo-props in props and the contextual keywords of `@external` and `@local` declarations.
  */
 class LezerKeywordCompletionContributor : CompletionContributor() {
-    override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
+    init {
+        extend(CompletionType.BASIC, psiElement().withLanguage(LezerLanguage), object : CompletionProvider<CompletionParameters>() {
+            override fun addCompletions(parameters: CompletionParameters, context: ProcessingContext, result: CompletionResultSet) =
+                addKeywords(parameters, result)
+        })
+    }
+
+    private fun addKeywords(parameters: CompletionParameters, result: CompletionResultSet) {
         val position = parameters.position
-        if (position.containingFile !is LezerFile) return
         val typed = position.text.substring(0, (parameters.offset - position.textRange.startOffset).coerceIn(0, position.textLength))
 
         val contextual = contextualKeywords(position)

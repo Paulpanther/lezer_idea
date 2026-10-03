@@ -11,6 +11,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.ui.EditorNotificationPanel
+import de.paulmethfessel.lezer.generatorSetup
 import de.paulmethfessel.lezer.generator.run.LezerGeneratorConfigurationType
 import de.paulmethfessel.lezer.generator.run.LezerGeneratorRunConfiguration
 import java.nio.file.Files
@@ -50,7 +51,10 @@ class LezerGeneratorIntegrationTest : BasePlatformTestCase() {
     fun testFindLocal() {
         val dir = Files.createTempDirectory("lezer")
         val pkg = dir.resolve("node_modules/@lezer/generator").createDirectories()
-        pkg.resolve("package.json").writeText("""{"name": "@lezer/generator", "version": "1.2.3"}""")
+        pkg.resolve("package.json").writeText(
+            """{"name": "@lezer/generator", "version": "1.2.3", "bin": {"lezer-generator": "./bin/cli.cjs"},
+               "exports": {".": {"import": "./esm/index.js", "require": "./cjs/index.cjs"}}}""",
+        )
         val grammar = dir.resolve("src").createDirectories().resolve("lang.grammar").apply { writeText("") }
         val file = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(grammar)!!
 
@@ -58,6 +62,8 @@ class LezerGeneratorIntegrationTest : BasePlatformTestCase() {
         assertEquals(GeneratorKind.LOCAL, generator.kind)
         assertEquals("1.2.3", generator.version)
         assertEquals(pkg, generator.packageDir)
+        assertEquals(pkg.resolve("bin/cli.cjs"), generator.cli)
+        assertEquals(pkg.resolve("esm/index.js"), generator.module)
 
         // Installs next to the closest package.json
         dir.resolve("package.json").writeText("{}")
@@ -89,10 +95,9 @@ class LezerGeneratorIntegrationTest : BasePlatformTestCase() {
         }
     }
 
-    /** Needs node and a generator package, e.g. `LEZER_GENERATOR_DIR=node_modules/@lezer/generator ./gradlew test`. */
+    /** Needs node and a generator package, see [generatorSetup]. */
     fun testLiveErrors() {
-        val generatorDir = System.getenv("LEZER_GENERATOR_DIR") ?: return
-        if (NodeLocator.find(project) == null) return
+        val generatorDir = (generatorSetup(project, name) ?: return).generatorDir
         settings.generator = GeneratorMode.CUSTOM
         settings.customGeneratorPath = generatorDir
 
@@ -111,10 +116,9 @@ class LezerGeneratorIntegrationTest : BasePlatformTestCase() {
         assertEmpty(highlight("@top P { a b }\na { \"x\" }\n").filter { it.startsWith("ERROR") })
     }
 
-    /** Needs node and a generator package, see [testLiveErrors]. */
+    /** Needs node and a generator package, see [generatorSetup]. */
     fun testGenerateParser() {
-        val generatorDir = System.getenv("LEZER_GENERATOR_DIR") ?: return
-        if (NodeLocator.find(project) == null) return
+        val generatorDir = (generatorSetup(project, name) ?: return).generatorDir
         val dir = Files.createTempDirectory("lezer")
         dir.resolve("lang.grammar").writeText("@top P { \"x\" }")
 
@@ -134,10 +138,9 @@ class LezerGeneratorIntegrationTest : BasePlatformTestCase() {
         assertTrue(Files.isRegularFile(dir.resolve("out/parser.terms.ts")))
     }
 
-    /** Needs node and a generator package, see [testLiveErrors]. */
+    /** Needs node and a generator package, see [generatorSetup]. */
     fun testGenerateOnSave() {
-        val generatorDir = System.getenv("LEZER_GENERATOR_DIR") ?: return
-        if (NodeLocator.find(project) == null) return
+        val generatorDir = (generatorSetup(project, name) ?: return).generatorDir
         val dir = Files.createTempDirectory("lezer")
         val grammarPath = dir.resolve("lang.grammar").apply { writeText("@top P { \"x\" }") }
         val grammar = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(grammarPath)!!

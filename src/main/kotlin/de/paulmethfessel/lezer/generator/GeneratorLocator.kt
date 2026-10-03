@@ -1,12 +1,15 @@
 package de.paulmethfessel.lezer.generator
 
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.roots.ProjectFileIndex
+import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.vfs.VirtualFile
 import java.nio.file.Files
@@ -21,11 +24,17 @@ enum class GeneratorKind(val displayName: String) {
     CUSTOM("custom"),
 }
 
-/** An installed `@lezer/generator` package. */
-data class LezerGenerator(val packageDir: Path, val version: String?, val kind: GeneratorKind) {
-    /** The command line interface script, see the `bin` entry of its package.json. */
-    val cli: Path get() = packageDir.resolve("src/lezer-generator.cjs")
-
+/**
+ * An installed `@lezer/generator` package, with its command line interface script ([cli], the `bin` of its
+ * package.json) and its ES module ([module], from `exports`).
+ */
+data class LezerGenerator(
+    val packageDir: Path,
+    val version: String?,
+    val kind: GeneratorKind,
+    val cli: Path,
+    val module: Path,
+) {
     val presentableText: String
         get() = "@lezer/generator ${version ?: "(unknown version)"}, ${kind.displayName}: $packageDir"
 }
@@ -88,14 +97,38 @@ object GeneratorLocator {
     fun load(packageDir: Path, kind: GeneratorKind): LezerGenerator? {
         val packageJson = packageDir.resolve("package.json")
         if (!Files.isRegularFile(packageJson)) return null
-        val version = runCatching { VERSION.find(packageJson.readText())?.groupValues?.get(1) }.getOrNull()
-        return LezerGenerator(packageDir, version, kind)
+        val json = runCatching { JsonParser.parseString(packageJson.readText()).asJsonObject }.getOrNull()
+        val version = json?.string("version")
+        // `bin` is a path or a map of command names to paths
+        val cli = json?.get("bin")?.let { bin -> if (bin.isJsonObject) bin.asJsonObject.string("lezer-generator") else bin.stringOrNull() }
+        val module = json?.let(::esModule)
+        return LezerGenerator(
+            packageDir, version, kind,
+            cli = packageDir.resolve(cli ?: "src/lezer-generator.cjs").normalize(),
+            module = packageDir.resolve(module ?: "dist/index.js").normalize(),
+        )
     }
 
-    private val VERSION = Regex(""""version"\s*:\s*"([^"]+)"""")
+    /** The file that `import "@lezer/generator"` loads: `exports` (string or conditions), then `module` and `main`. */
+    private fun esModule(json: JsonObject): String? {
+        val exports = json.get("exports")?.let { if (it.isJsonObject && it.asJsonObject.has(".")) it.asJsonObject.get(".") else it }
+        val export = when {
+            exports == null -> null
+            exports.isJsonObject -> exports.asJsonObject.let { it.string("import") ?: it.string("default") }
+            else -> exports.stringOrNull()
+        }
+        return export ?: json.string("module") ?: json.string("main")
+    }
 
-    private fun searchDirectories(project: Project, grammarFile: VirtualFile?): List<Path> = ReadAction.compute<List<Path>, Throwable> {
-        val start = grammarFile?.parent ?: project.guessProjectDir() ?: return@compute emptyList()
+    private fun JsonObject.string(name: String): String? = get(name)?.stringOrNull()
+
+    private fun JsonElement.stringOrNull(): String? = takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString
+
+    private fun searchDirectories(project: Project, grammarFile: VirtualFile?): List<Path> =
+        ApplicationManager.getApplication().runReadAction(Computable { searchDirectoriesInReadAction(project, grammarFile) })
+
+    private fun searchDirectoriesInReadAction(project: Project, grammarFile: VirtualFile?): List<Path> {
+        val start = grammarFile?.parent ?: project.guessProjectDir() ?: return emptyList()
         val root = grammarFile?.let { ProjectFileIndex.getInstance(project).getContentRootForFile(it) }
             ?: project.guessProjectDir()
         val dirs = mutableListOf<Path>()
@@ -105,7 +138,7 @@ object GeneratorLocator {
             if (dir == root) break
             dir = dir.parent
         }
-        dirs
+        return dirs
     }
 
     private fun globalRoot(node: NodeInstallation, allowProcess: Boolean): Path? {
@@ -139,9 +172,9 @@ object GeneratorLocator {
     }
 
     /** npm's default global prefix is node's installation directory. */
-    private fun defaultGlobalRoot(node: NodeInstallation): Path? {
+    internal fun defaultGlobalRoot(node: NodeInstallation, isWindows: Boolean = SystemInfo.isWindows): Path? {
         val bin = node.node.parent ?: return null
-        return if (SystemInfo.isWindows) bin.resolve("node_modules") else bin.parent?.resolve("lib/node_modules")
+        return if (isWindows) bin.resolve("node_modules") else bin.parent?.resolve("lib/node_modules")
     }
 
     private fun canRunProcess(): Boolean {

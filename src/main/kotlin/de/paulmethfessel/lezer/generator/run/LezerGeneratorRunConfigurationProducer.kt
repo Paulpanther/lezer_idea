@@ -18,10 +18,7 @@ class LezerGeneratorRunConfigurationProducer : LazyRunConfigurationProducer<Leze
         sourceElement: Ref<PsiElement>,
     ): Boolean {
         val file = grammarFile(context) ?: return false
-        val options = configuration.options
-        options.grammarFile = file.path
-        options.outputFile = file.parent.path + "/parser"
-        configuration.name = "Generate ${file.name}"
+        LezerGeneratorConfigurations.applyDefaults(configuration, file)
         return true
     }
 

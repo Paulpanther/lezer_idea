@@ -8,11 +8,14 @@ import de.paulmethfessel.lezer.resolve.LezerResolver
  * capitalized or they have an `@name` prop, see https://lezer.codemirror.net/docs/guide/#writing-a-grammar
  */
 object LezerNodeNames {
-    /** The value of the `@name` prop, if there is one. */
+    /**
+     * The value of the `@name` prop, if there is one, with quotes removed (`@name="Name"` names the node `Name`). Null if
+     * it is built from a parameter (`@name={name}`), since then it depends on the arguments of each use.
+     */
     fun explicitName(element: LezerNamedElement): String? {
-        val props = PsiTreeUtil.getChildOfType(element, LezerProps::class.java) ?: return null
-        val prop = props.propList.firstOrNull { it.firstChild.text == "@name" } ?: return null
-        return prop.text.substringAfter('=', "").takeIf { it.isNotEmpty() }
+        val prop = element.pseudoProp("@name") ?: return null
+        if (prop.propInterpolationList.isNotEmpty()) return null
+        return LezerStrings.unquote(prop.text.substringAfter('=', "")).takeIf { it.isNotEmpty() }
     }
 
     /** The name of the node [element] creates, or null if it creates none. */

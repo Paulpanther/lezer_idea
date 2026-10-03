@@ -16,6 +16,7 @@
   elementTypeClass="de.paulmethfessel.lezer.psi.LezerElementType"
   tokenTypeClass="de.paulmethfessel.lezer.psi.LezerTokenType"
 
+  // Only used by Grammar-Kit's live preview, the plugin's lexer is Lezer.flex
   tokens=[
     LINE_COMMENT='regexp://.*'
     BLOCK_COMMENT='regexp:/\*([^*]|\*+[^*/])*\*+/'
@@ -40,7 +41,7 @@
     AT_SPECIALIZE='@specialize'
     AT_EXTEND='@extend'
     CHAR_CLASS='regexp:@(asciiLetter|asciiLowercase|asciiUppercase|digit|whitespace|eof)'
-    AT_NAME='regexp:@[\w\-]+'
+    AT_NAME='regexp:@[\p{Alpha}0-9_\-]+'
 
     // Contextual keywords, they are valid identifiers everywhere else
     KW_TOKENS='tokens'
@@ -52,7 +53,7 @@
     KW_SPECIALIZE='specialize'
 
     ANY_CHAR='_'
-    NAME='regexp:[\w\-]+'
+    NAME='regexp:[\p{Alpha}0-9_\-]+'
 
     LBRACE='{'
     RBRACE='}'
@@ -78,7 +79,9 @@
   name(".*Expression")="expression"
 
   // Declarations: named elements that can be referenced, renamed, shown in the structure view, ...
-  implements("ruleDeclaration|topRuleDeclaration|inlineRuleExpression|externalToken|elseToken|precedence|dialect|parameter|externalTokensDeclaration|externalPropDeclaration|externalPropSourceDeclaration|externalSpecializeDeclaration|contextDeclaration")="de.paulmethfessel.lezer.psi.LezerNamedElement"
+  implements("inlineRuleExpression|externalToken|elseToken|precedence|dialect|parameter|externalTokensDeclaration|externalPropDeclaration|externalPropSourceDeclaration|externalSpecializeDeclaration|contextDeclaration")="de.paulmethfessel.lezer.psi.LezerNamedElement"
+  // Rules that can have parameters: `name<params> { body }`, with or without `@top`
+  implements("ruleDeclaration|topRuleDeclaration")="de.paulmethfessel.lezer.psi.LezerRule"
   mixin("ruleDeclaration|topRuleDeclaration|inlineRuleExpression|externalToken|elseToken|precedence|dialect|parameter|externalTokensDeclaration|externalPropDeclaration|externalPropSourceDeclaration|externalSpecializeDeclaration|contextDeclaration")="de.paulmethfessel.lezer.psi.impl.LezerNamedElementImpl"
 
   // Names that can be references to declarations

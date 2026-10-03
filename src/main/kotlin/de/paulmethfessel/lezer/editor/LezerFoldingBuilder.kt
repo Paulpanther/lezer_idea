@@ -9,9 +9,9 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
-import com.intellij.psi.tree.TokenSet
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import de.paulmethfessel.lezer.psi.LezerTokenSets
 import de.paulmethfessel.lezer.psi.LezerTypes.*
 
 /** Folds multi-line braced blocks, block comments and runs of line comments, plus `// region` custom folding. */
@@ -24,7 +24,7 @@ class LezerFoldingBuilder : CustomFoldingBuilder(), DumbAware {
     ) {
         PsiTreeUtil.processElements(root) { element ->
             when {
-                element.elementType in BLOCKS -> foldBlock(element, document, descriptors)
+                element.elementType in LezerTokenSets.BRACED_BLOCKS -> foldBlock(element, document, descriptors)
                 element.elementType == BLOCK_COMMENT -> foldIfMultiline(element.node, element.textRange, document, descriptors)
                 element.elementType == LINE_COMMENT -> foldLineComments(element as PsiComment, document, descriptors)
             }
@@ -42,7 +42,7 @@ class LezerFoldingBuilder : CustomFoldingBuilder(), DumbAware {
 
     override fun isCustomFoldingCandidate(node: ASTNode): Boolean = node.elementType == LINE_COMMENT
 
-    override fun isCustomFoldingRoot(node: ASTNode): Boolean = node.treeParent == null || node.elementType in BLOCKS
+    override fun isCustomFoldingRoot(node: ASTNode): Boolean = node.treeParent == null || node.elementType in LezerTokenSets.BRACED_BLOCKS
 
     /** Folds from the opening to the closing brace, incomplete blocks without a closing brace are not folded. */
     private fun foldBlock(element: PsiElement, document: Document, descriptors: MutableList<FoldingDescriptor>) {
@@ -76,12 +76,5 @@ class LezerFoldingBuilder : CustomFoldingBuilder(), DumbAware {
         if (document.getLineNumber(range.startOffset) != document.getLineNumber(range.endOffset)) {
             descriptors += FoldingDescriptor(node, range)
         }
-    }
-
-    private companion object {
-        val BLOCKS = TokenSet.create(
-            BODY, PRECEDENCE_BODY, TOKENS_BODY, LOCAL_TOKENS_BODY, TOKEN_PRECEDENCE_BODY, CONFLICT_BODY,
-            EXTERNAL_TOKEN_SET, DIALECTS_BODY, SKIP_BODY,
-        )
     }
 }

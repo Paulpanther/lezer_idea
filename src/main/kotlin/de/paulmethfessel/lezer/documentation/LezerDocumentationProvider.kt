@@ -11,7 +11,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.elementType
 import de.paulmethfessel.lezer.LezerLanguage
 import de.paulmethfessel.lezer.psi.*
 
@@ -72,12 +71,7 @@ class LezerDocumentationProvider : AbstractDocumentationProvider() {
                 ?.let { add("Parameter of" to code(it)) }
             is LezerPrecedence -> {
                 val precedences = (element.parent as? LezerPrecedenceBody)?.precedenceList.orEmpty()
-                val associativity = when (element.lastChild.elementType) {
-                    LezerTypes.AT_LEFT -> "left associative"
-                    LezerTypes.AT_RIGHT -> "right associative"
-                    LezerTypes.AT_CUT -> "cut"
-                    else -> "no associativity"
-                }
+                val associativity = element.associativity.description
                 add("Precedence" to "${precedences.indexOf(element) + 1} of ${precedences.size} (highest first), $associativity")
             }
         }

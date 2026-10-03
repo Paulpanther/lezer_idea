@@ -9,10 +9,10 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.CollectionComboBoxModel
 import com.intellij.ui.DocumentAdapter
-import com.intellij.ui.SimpleListCellRenderer
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.Panel
+import com.intellij.ui.dsl.listCellRenderer.textListCellRenderer
 import com.intellij.util.ui.UIUtil
 import java.awt.Dimension
 import javax.swing.event.DocumentEvent
@@ -30,7 +30,7 @@ class GeneratorSelector(
     private val modeCombo = ComboBox<GeneratorMode?>(
         CollectionComboBoxModel((if (projectDefault) listOf(null) else emptyList()) + GeneratorMode.entries),
     ).apply {
-        renderer = SimpleListCellRenderer.create("Project default") { it?.displayName ?: "Project default" }
+        renderer = textListCellRenderer { it?.displayName ?: "Project default" }
         addActionListener { updateState() }
     }
 

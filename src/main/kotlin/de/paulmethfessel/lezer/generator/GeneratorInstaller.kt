@@ -1,7 +1,6 @@
 package de.paulmethfessel.lezer.generator
 
 import com.intellij.execution.process.CapturingProcessHandler
-import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
@@ -14,8 +13,6 @@ import java.nio.file.Path
 
 /** Installs `@lezer/generator` with npm, either into the grammar's package or globally. */
 object GeneratorInstaller {
-    private const val NOTIFICATION_GROUP = "Lezer Generator"
-
     fun install(project: Project, grammarFile: VirtualFile?, global: Boolean, onFinished: () -> Unit = {}) {
         val node = NodeLocator.find(project)
         val npm = node?.npm
@@ -76,9 +73,7 @@ object GeneratorInstaller {
     }
 
     private fun notify(project: Project, content: String, type: NotificationType) {
-        NotificationGroupManager.getInstance().getNotificationGroup(NOTIFICATION_GROUP)
-            .createNotification(content, type)
-            .notify(project)
+        LezerNotifications.group().createNotification(content, type).notify(project)
     }
 
     private fun escape(text: String) = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")

@@ -4,10 +4,12 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import de.paulmethfessel.lezer.generator.GeneratorKind
+import de.paulmethfessel.lezer.generator.GeneratorLocator
 import de.paulmethfessel.lezer.generator.GeneratorMode
 import de.paulmethfessel.lezer.generator.LezerSettings
 import de.paulmethfessel.lezer.generator.NodeInstallation
-import de.paulmethfessel.lezer.generator.NodeLocator
+import de.paulmethfessel.lezer.generatorSetup
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
@@ -15,10 +17,10 @@ import javax.swing.tree.DefaultMutableTreeNode
 import kotlin.io.path.Path
 import kotlin.io.path.writeText
 
-/** Runs the real worker, needs node and `LEZER_GENERATOR_DIR` (see the README). */
+/** Runs the real worker, needs node and `LEZER_GENERATOR_DIR`, see [generatorSetup]. */
 class PlaygroundIntegrationTest : BasePlatformTestCase() {
-    private val generatorDir: String? = System.getenv("LEZER_GENERATOR_DIR")
     private lateinit var node: NodeInstallation
+    private lateinit var generatorDir: String
 
     private val grammar = """
         @top Program { (Number | Word)* }
@@ -27,10 +29,6 @@ class PlaygroundIntegrationTest : BasePlatformTestCase() {
         @tokens { Number { @digit+ } Word { @asciiLetter+ } space { " "+ } }
     """.trimIndent()
 
-    override fun setUp() {
-        super.setUp()
-        node = NodeLocator.find(project) ?: NodeInstallation(Path("/missing"), "")
-    }
 
     override fun tearDown() {
         try {
@@ -40,7 +38,12 @@ class PlaygroundIntegrationTest : BasePlatformTestCase() {
         }
     }
 
-    private fun available() = generatorDir != null && Files.isRegularFile(node.node)
+    private fun available(): Boolean {
+        val setup = generatorSetup(project, name) ?: return false
+        node = setup.node
+        generatorDir = setup.generatorDir
+        return true
+    }
 
     fun testParseWithMissingModule() {
         if (!available()) return
@@ -64,6 +67,16 @@ class PlaygroundIntegrationTest : BasePlatformTestCase() {
         val result = parse(dir, grammar, "12 ab")
         assertNull(result.grammarError)
         assertEquals(emptyList<String>(), result.moduleErrors)
+        // Changing it restarts the worker
+        assertEquals(listOf("highlight.js"), result.modules.map { Path(it).fileName.toString() })
+    }
+
+    fun testMissingContextModule() {
+        if (!available()) return
+        val result = parse(Files.createTempDirectory("lezer"), "@context tracker from \"./context\"\n@top P { \"x\" }", "x")
+        assertNull(result.grammarError)
+        assertTrue(result.moduleErrors.single(), result.moduleErrors.single().contains("./context"))
+        assertEquals("P", describe(result.tree!!))
     }
 
     fun testPanel() {
@@ -105,7 +118,7 @@ class PlaygroundIntegrationTest : BasePlatformTestCase() {
         val file = myFixture.configureByText("test.grammar", grammar) as de.paulmethfessel.lezer.psi.LezerFile
         val worker = PlaygroundWorker.getInstance(project)
         val request = PlaygroundRequest(
-            worker.nextId(), generatorDir!!, grammar, dir.toString(), input, null, null,
+            worker.nextId(), GeneratorLocator.load(Path(generatorDir), GeneratorKind.CUSTOM)!!.module.toString(), grammar, dir.toString(), input, null, null,
             PlaygroundGrammarInfo.of(file).externals,
         )
         return worker.parse(node, request).get(30, TimeUnit.SECONDS)!!

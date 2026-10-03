@@ -319,7 +319,7 @@ class LezerPlaygroundPanel(private val project: Project) : SimpleToolWindowPanel
             ApplicationManager.getApplication().invokeLater({ showSetupBanner(node == null, generator == null) }, project.disposed)
             if (node == null || generator == null) return@executeOnPooledThread
             val request = PlaygroundRequest(
-                id, generator.packageDir.toString(), grammarText, file.parent.path, input, top, dialects, externals,
+                id, generator.module.toString(), grammarText, file.parent.path, input, top, dialects, externals,
             )
             worker.parse(node, request).thenAccept { result ->
                 if (result != null) ApplicationManager.getApplication().invokeLater({ apply(result) }, project.disposed)
@@ -380,11 +380,10 @@ class LezerPlaygroundPanel(private val project: Project) : SimpleToolWindowPanel
     private fun updateTree(root: PlaygroundNode) {
         val expanded = TreeUtil.collectExpandedPaths(tree).map(::indexPath)
         treeModel.setRoot(toTreeNode(root))
-        val count = root.walk().count()
-        if (expanded.isEmpty() || count <= EXPAND_ALL_NODES) {
-            if (count <= EXPAND_ALL_NODES) TreeUtil.expandAll(tree) else tree.expandRow(0)
-        } else {
-            expanded.forEach { indices -> pathOf(indices)?.let(tree::expandPath) }
+        when {
+            root.walk().count() <= EXPAND_ALL_NODES -> TreeUtil.expandAll(tree)
+            expanded.isEmpty() -> tree.expandRow(0)
+            else -> expanded.forEach { indices -> pathOf(indices)?.let(tree::expandPath) }
         }
     }
 

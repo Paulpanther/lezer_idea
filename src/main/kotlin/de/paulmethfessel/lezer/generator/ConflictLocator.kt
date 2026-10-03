@@ -14,9 +14,9 @@ import de.paulmethfessel.lezer.psi.LezerLiteralExpression
 import de.paulmethfessel.lezer.psi.LezerNameExpression
 import de.paulmethfessel.lezer.psi.LezerNamedElement
 import de.paulmethfessel.lezer.psi.LezerProps
-import de.paulmethfessel.lezer.psi.LezerRuleDeclaration
+import de.paulmethfessel.lezer.psi.LezerRule
 import de.paulmethfessel.lezer.psi.LezerRuleName
-import de.paulmethfessel.lezer.psi.LezerTopRuleDeclaration
+import de.paulmethfessel.lezer.psi.LezerStrings
 import de.paulmethfessel.lezer.psi.LezerTypes
 
 /**
@@ -74,8 +74,7 @@ object ConflictLocator {
     private fun declarations(file: PsiFile, name: String): List<LezerBody> =
         PsiTreeUtil.findChildrenOfType(file, LezerNamedElement::class.java).filter { it.name == name }.mapNotNull {
             when (it) {
-                is LezerRuleDeclaration -> it.body
-                is LezerTopRuleDeclaration -> it.body
+                is LezerRule -> it.body
                 is LezerInlineRuleExpression -> it.body
                 else -> null
             }
@@ -108,7 +107,7 @@ object ConflictLocator {
                 when {
                     element is LezerRuleName -> element.text to highlighted(element)
                     element.elementType == LezerTypes.STRING && element.parent is LezerLiteralExpression ->
-                        unquote(element.text) to highlighted(element.parent)
+                        LezerStrings.unquote(element.text) to highlighted(element.parent)
                     else -> null
                 }
             }
@@ -123,12 +122,6 @@ object ConflictLocator {
     /** `"or"` and the specialized `Word/"or"` both stand for the literal `or`. */
     private fun symbolKey(symbol: String): String {
         val literal = symbol.substringAfter('/', symbol).takeIf { it.startsWith('"') } ?: symbol
-        return if (literal.startsWith('"')) unquote(literal) else literal
-    }
-
-    private fun unquote(text: String): String {
-        if (text.length < 2) return text
-        val content = text.substring(1, text.length - 1)
-        return Regex("""\\(.)""").replace(content) { it.groupValues[1] }
+        return if (literal.startsWith('"')) LezerStrings.unquote(literal) else literal
     }
 }

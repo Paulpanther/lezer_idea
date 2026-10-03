@@ -93,6 +93,17 @@ jobs:
         with:
           cache-read-only: true
 
+      # Node.js and @lezer/generator for the tests that run the real generator, see the README
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+
+      - name: Install @lezer/generator
+        run: |
+          npm i --prefix "$RUNNER_TEMP/lezer" @lezer/generator
+          echo "LEZER_GENERATOR_DIR=$RUNNER_TEMP/lezer/node_modules/@lezer/generator" >> "$GITHUB_ENV"
+
       # Run tests
       - name: Run Tests
         run: ./gradlew check

@@ -42,7 +42,8 @@ class LezerUnusedDeclarationTest : BasePlatformTestCase() {
             other[@export] { "o" }
             """.trimIndent(),
         )
-        myFixture.launchAction(myFixture.findSingleIntention("Remove unused rule 'unused'"))
+        // The preview must show the same result
+        myFixture.checkPreviewAndLaunchAction(myFixture.findSingleIntention("Remove unused rule 'unused'"))
         myFixture.checkResult(
             """
             @top Program { "a" }

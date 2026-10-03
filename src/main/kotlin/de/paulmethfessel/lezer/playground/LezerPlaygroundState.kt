@@ -24,21 +24,18 @@ class LezerPlaygroundState : SimplePersistentStateComponent<LezerPlaygroundState
     fun setInput(grammarPath: String, text: String) {
         if (state.inputs[grammarPath] == text) return
         state.inputs[grammarPath] = text
-        state.intIncrementModificationCount()
     }
 
     fun top(grammarPath: String): String? = state.tops[grammarPath]
 
     fun setTop(grammarPath: String, top: String?) {
         if (top == null) state.tops.remove(grammarPath) else state.tops[grammarPath] = top
-        state.intIncrementModificationCount()
     }
 
     fun dialects(grammarPath: String): Set<String> = state.dialects[grammarPath]?.split(' ')?.filter { it.isNotEmpty() }?.toSet().orEmpty()
 
     fun setDialects(grammarPath: String, dialects: Set<String>) {
         state.dialects[grammarPath] = dialects.joinToString(" ")
-        state.intIncrementModificationCount()
     }
 
     companion object {

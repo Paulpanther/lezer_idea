@@ -8,14 +8,20 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.LocalSearchScope
 import com.intellij.psi.search.SearchScope
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
+import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import de.paulmethfessel.lezer.psi.*
 import javax.swing.Icon
 
 abstract class LezerNamedElementImpl(node: ASTNode) : ASTWrapperPsiElement(node), LezerNamedElement {
+    /** Depends on the enclosing blocks, so it is cached until any PSI changes. */
     override val kind: LezerDeclarationKind
-        get() = LezerDeclarationKind.of(this)
+        get() = CachedValuesManager.getCachedValue(this) {
+            CachedValueProvider.Result.create(LezerDeclarationKind.of(this), PsiModificationTracker.MODIFICATION_COUNT)
+        }
 
     override fun getNameIdentifier(): PsiElement? = when (this) {
         is LezerParameter, is LezerDialect -> firstChild
@@ -42,14 +48,12 @@ abstract class LezerNamedElementImpl(node: ASTNode) : ASTWrapperPsiElement(node)
     }
 
     private fun parameterSuffix(): String {
-        val params = (this as? LezerRuleDeclaration)?.paramList ?: (this as? LezerTopRuleDeclaration)?.paramList
-        return params?.parameterList?.joinToString(", ", "<", ">") { it.text }.orEmpty()
+        return (this as? LezerRule)?.paramList?.parameterList?.joinToString(", ", "<", ">") { it.text }.orEmpty()
     }
 
     override fun getUseScope(): SearchScope {
         if (this is LezerParameter) {
-            PsiTreeUtil.getParentOfType(this, LezerRuleDeclaration::class.java, LezerTopRuleDeclaration::class.java)
-                ?.let { return LocalSearchScope(it) }
+            PsiTreeUtil.getParentOfType(this, LezerRule::class.java)?.let { return LocalSearchScope(it) }
         }
         val file = LocalSearchScope(containingFile)
         // Rules and tokens can also be used by code that uses the generated parser

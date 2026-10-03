@@ -39,11 +39,21 @@ class PlaygroundGrammarInfoTest : BasePlatformTestCase() {
     fun testNodeNames() {
         val file = myFixture.configureByText(
             "test.grammar",
-            "@top Program { expr }\nexpr { Binary { \"x\" } | lower | named }\nlower { \"l\" }\nnamed[@name=Named] { \"n\" }",
+            "@top Program { expr }\nexpr { Binary { \"x\" } | lower | named | quoted | kw<\"if\"> }\nlower { \"l\" }\n" +
+                "named[@name=Named] { \"n\" }\nquoted[@name=\"Quoted\"] { \"q\" }\nkw[@name={term}]<term> { term }",
         ) as LezerFile
-        val names = PsiTreeUtil.findChildrenOfType(file, LezerNamedElement::class.java).associate { it.name to LezerNodeNames.nodeName(it) }
-        assertEquals(mapOf("Program" to "Program", "expr" to null, "Binary" to "Binary", "lower" to null, "named" to "Named"), names)
+        val names = PsiTreeUtil.findChildrenOfType(file, LezerNamedElement::class.java)
+            .filter { it.kind.isTerm || it.kind.isToken }
+            .associate { it.name to LezerNodeNames.nodeName(it) }
+        assertEquals(
+            mapOf(
+                "Program" to "Program", "expr" to null, "Binary" to "Binary", "lower" to null, "named" to "Named",
+                "quoted" to "Quoted", "kw" to null,
+            ),
+            names,
+        )
         assertEquals("named", LezerNodeNames.declarationsOf(file, "Named").single().name)
+        assertEquals("quoted", LezerNodeNames.declarationsOf(file, "Quoted").single().name)
         assertEquals("Binary", LezerNodeNames.declarationsOf(file, "Binary").single().name)
     }
 }

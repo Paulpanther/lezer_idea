@@ -10,6 +10,7 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.tree.TokenSet
 import de.paulmethfessel.lezer.parser.LezerParserDefinition
+import de.paulmethfessel.lezer.psi.LezerTokenSets.BRACKETED
 import de.paulmethfessel.lezer.psi.LezerTypes.*
 
 class LezerBlock(
@@ -76,13 +77,6 @@ class LezerBlock(
     }
 
     companion object {
-        /** Elements whose content is enclosed in (and indented relative to) a pair of brackets. */
-        val BRACKETED = TokenSet.create(
-            BODY, PRECEDENCE_BODY, TOKENS_BODY, LOCAL_TOKENS_BODY, TOKEN_PRECEDENCE_BODY, CONFLICT_BODY,
-            EXTERNAL_TOKEN_SET, DIALECTS_BODY, SKIP_BODY, PAREN_EXPRESSION, PROPS, PARAM_LIST, ARG_LIST,
-            PROP_INTERPOLATION,
-        )
-
         private val ALIGNED_CHOICE_PARENTS = TokenSet.create(PAREN_EXPRESSION, ARG_LIST)
 
         val OPENING = TokenSet.create(LBRACE, LPAREN, LBRACKET, LANGLE)

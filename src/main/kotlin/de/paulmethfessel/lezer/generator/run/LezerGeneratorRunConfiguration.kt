@@ -74,8 +74,11 @@ class LezerGeneratorRunConfiguration(project: Project, factory: ConfigurationFac
         return GeneratorLocator.resolve(project, file, mode, options.customGeneratorPath)
     }
 
+    /** The files the generator writes. */
+    fun outputPaths(): List<Path> = GeneratorArguments.outputFiles(options).map { resolve(it) }
+
     fun refreshOutput() {
-        val files = GeneratorArguments.outputFiles(options).map { resolve(it) }
+        val files = outputPaths()
         if (files.isNotEmpty()) LocalFileSystem.getInstance().refreshNioFiles(files, true, false, null)
     }
 

@@ -28,7 +28,7 @@ class LezerSpacing(private val common: CommonCodeStyleSettings, private val cust
 
             // Brackets
             l in LezerBlock.OPENING && r in LezerBlock.CLOSING -> space(false)
-            p in BRACES && (l == LBRACE || r == RBRACE) -> space(custom.SPACE_WITHIN_BRACES, beforeClosing = r == RBRACE)
+            p in LezerTokenSets.BRACED_BLOCKS && (l == LBRACE || r == RBRACE) -> space(custom.SPACE_WITHIN_BRACES, beforeClosing = r == RBRACE)
             p == PAREN_EXPRESSION -> space(common.SPACE_WITHIN_PARENTHESES, beforeClosing = r == RPAREN)
             p in TIGHT_BRACKETS && (l in LezerBlock.OPENING || r in LezerBlock.CLOSING) ->
                 space(false, beforeClosing = r in LezerBlock.CLOSING)
@@ -58,12 +58,6 @@ class LezerSpacing(private val common: CommonCodeStyleSettings, private val cust
         Spacing.createSpacing(0, 0, 1, common.KEEP_LINE_BREAKS, common.KEEP_BLANK_LINES_IN_CODE)
 
     private companion object {
-        /** Braced blocks that get a space inside when written on a single line: `Rule { a b }`. */
-        val BRACES = TokenSet.create(
-            BODY, PRECEDENCE_BODY, TOKENS_BODY, LOCAL_TOKENS_BODY, TOKEN_PRECEDENCE_BODY, CONFLICT_BODY,
-            EXTERNAL_TOKEN_SET, DIALECTS_BODY, SKIP_BODY,
-        )
-
         /** Brackets that never have spaces inside: `[@name=A]`, `<a, b>`, `{name}`. */
         val TIGHT_BRACKETS = TokenSet.create(PROPS, PARAM_LIST, ARG_LIST, PROP_INTERPOLATION)
     }

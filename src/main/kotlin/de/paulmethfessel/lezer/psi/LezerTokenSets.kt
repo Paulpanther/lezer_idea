@@ -29,6 +29,20 @@ object LezerTokenSets {
     @JvmField
     val SPECIALIZE_KEYWORDS = TokenSet.create(AT_SPECIALIZE, AT_EXTEND)
 
+    /** Declaration bodies and lists in braces, like rule bodies and `@tokens { }`. */
+    @JvmField
+    val BRACED_BLOCKS = TokenSet.create(
+        BODY, PRECEDENCE_BODY, TOKENS_BODY, LOCAL_TOKENS_BODY, TOKEN_PRECEDENCE_BODY, CONFLICT_BODY,
+        EXTERNAL_TOKEN_SET, DIALECTS_BODY, SKIP_BODY,
+    )
+
+    /** Elements whose content is enclosed in a pair of brackets of any kind. */
+    @JvmField
+    val BRACKETED = TokenSet.orSet(
+        BRACED_BLOCKS,
+        TokenSet.create(PAREN_EXPRESSION, PROPS, PARAM_LIST, ARG_LIST, PROP_INTERPOLATION),
+    )
+
     /** Words that are keywords only at specific positions, identifiers everywhere else. */
     @JvmField
     val CONTEXTUAL_KEYWORDS = TokenSet.create(

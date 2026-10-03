@@ -30,12 +30,17 @@ object LezerResolver {
             }
             is LezerPrecedenceName -> if (parent is LezerPrecedenceMarker) Namespace.PRECEDENCE else null
             is LezerPropName -> Namespace.PROP
-            is LezerSimpleName -> if (parent is LezerProp && isPseudoProp(parent, "@dialect")) Namespace.DIALECT else null
+            is LezerSimpleName -> if (parent is LezerProp && parent.pseudoName == "@dialect") Namespace.DIALECT else null
             else -> null
         }
     }
 
-    fun resolve(element: PsiElement): LezerNamedElement? = candidates(element).firstOrNull { it.name == element.text }
+    /** The declaration the name element [element] refers to, cached until the PSI changes. */
+    fun resolve(element: PsiElement): LezerNamedElement? = (element.reference as? LezerReference)?.resolve()
+
+    /** Resolves without the cache, see [LezerReference.resolve]. */
+    internal fun resolveUncached(element: PsiElement): LezerNamedElement? =
+        candidates(element).firstOrNull { it.name == element.text }
 
     /** The rules and tokens of the file that can be referenced by name, also from code using the generated parser. */
     fun globalRules(file: LezerFile): List<LezerNamedElement> = declarations(file).rules
@@ -67,12 +72,9 @@ object LezerResolver {
         ) != null
 
     private fun parameters(element: PsiElement): List<LezerParameter> {
-        val rule = PsiTreeUtil.getParentOfType(element, LezerRuleDeclaration::class.java, LezerTopRuleDeclaration::class.java)
-        val params = (rule as? LezerRuleDeclaration)?.paramList ?: (rule as? LezerTopRuleDeclaration)?.paramList
-        return params?.parameterList.orEmpty()
+        val rule = PsiTreeUtil.getParentOfType(element, LezerRule::class.java)
+        return rule?.paramList?.parameterList.orEmpty()
     }
-
-    private fun isPseudoProp(prop: LezerProp, name: String): Boolean = prop.firstChild.text == name
 
     private class Declarations(
         val rules: List<LezerNamedElement>,

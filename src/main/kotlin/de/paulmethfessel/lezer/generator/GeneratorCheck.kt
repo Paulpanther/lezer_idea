@@ -11,7 +11,18 @@ class GeneratorReport(
     val warnings: List<String> = emptyList(),
     /** An unexpected error of the generator or the check script. */
     val failure: String? = null,
-)
+) {
+    /** The script's JSON. Gson doesn't call constructors, so missing properties are null even if Kotlin says otherwise. */
+    private class Json(val errors: List<String>?, val warnings: List<String>?, val failure: String?)
+
+    companion object {
+        fun parse(json: String): GeneratorReport {
+            val report = Gson().fromJson(json, Json::class.java)
+                ?: return GeneratorReport(failure = "lezer-generator produced no output")
+            return GeneratorReport(report.errors.orEmpty(), report.warnings.orEmpty(), report.failure)
+        }
+    }
+}
 
 /** Runs `@lezer/generator` on a grammar without writing the generated parser anywhere. */
 object GeneratorCheck {
@@ -30,8 +41,7 @@ object GeneratorCheck {
             output.isCancelled -> GeneratorReport()
             output.isTimeout -> GeneratorReport(failure = "lezer-generator did not finish within ${TIMEOUT_MS / 1000} seconds")
             output.exitCode != 0 -> GeneratorReport(failure = output.stderr.ifBlank { "exit code ${output.exitCode}" })
-            else -> Gson().fromJson(output.stdout, GeneratorReport::class.java)
-                ?: GeneratorReport(failure = "lezer-generator produced no output")
+            else -> GeneratorReport.parse(output.stdout)
         }
     }
 }

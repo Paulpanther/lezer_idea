@@ -1,8 +1,9 @@
 // Worker of the Lezer Playground tool window: builds parsers from grammars and parses example input with them.
 // Reads one JSON request per line from stdin and writes one JSON response per line to stdout.
 //
-// Request: {id, generatorDir, grammar, grammarDir, input, top?, dialect?, externals: [{kind, name, source}]}
-// Response: {id, tree, grammarError?, moduleErrors, truncated, ms}
+// Request: {id, generatorModule, grammar, grammarDir, input, top?, dialect?, externals: [{kind, name, source}]}
+// Response: {id, tree, grammarError?, moduleErrors, modules, truncated, ms}
+//   modules: the files of all @external implementations imported so far
 //   tree: {n: name, f: from, t: to, e?: true for error nodes, c?: children}
 import {createInterface} from "node:readline"
 import {createRequire} from "node:module"
@@ -36,9 +37,9 @@ function resolveEsm(specifier, fromFile) {
   }
 }
 
+// Node caches imported modules, the worker is restarted when one of them changes
 async function importFile(file) {
-  const version = fs.statSync(file).mtimeMs
-  return import(pathToFileURL(file).href + "?v=" + version)
+  return import(pathToFileURL(file).href)
 }
 
 /** The file of a module named in `@external … from "source"`, relative to the grammar. */
@@ -53,10 +54,11 @@ function resolveSource(source, grammarDir) {
 }
 
 let cached = {key: null, parser: null, moduleErrors: []}
+// All modules imported by this process, node keeps them cached until it exits
+const importedModules = new Set()
 
 async function build(request) {
-  const {generatorDir, grammar, grammarDir, externals = []} = request
-  const generatorEntry = path.join(generatorDir, "dist", "index.js")
+  const {generatorModule: generatorEntry, grammar, grammarDir, externals = []} = request
   const moduleErrors = []
 
   // Load the modules named by the grammar, keyed by file
@@ -77,7 +79,8 @@ async function build(request) {
     else moduleErrors.push(`${path.basename(file)} doesn't export '${name}'`)
   }
 
-  const key = JSON.stringify([grammar, generatorDir, externals, [...files.keys()].map(f => fs.statSync(f).mtimeMs)])
+  for (const file of files.keys()) importedModules.add(file)
+  const key = JSON.stringify([grammar, generatorEntry, externals, [...files.keys()].map(f => fs.statSync(f).mtimeMs)])
   if (cached.key === key) return cached
 
   const generator = await import(pathToFileURL(generatorEntry).href)
@@ -92,7 +95,8 @@ async function build(request) {
     externalSpecializer: name => found(name) ?? (() => -1),
     externalPropSource: name => found(name) ?? (() => null),
     externalProp: name => found(name) ?? new common.NodeProp(),
-    contextTracker: externals.some(e => e.kind === "context") ? found(externals.find(e => e.kind === "context").name) : undefined,
+    // The generator works without a context tracker, so a missing one needs no placeholder
+    contextTracker: found(externals.find(e => e.kind === "context")?.name),
   })
 
   cached = {key, parser, moduleErrors}
@@ -116,15 +120,17 @@ function toJson(tree, budget) {
 
 async function handle(request) {
   const start = Date.now()
-  const response = {id: request.id, tree: null, moduleErrors: [], truncated: false}
+  const response = {id: request.id, tree: null, moduleErrors: [], modules: [], truncated: false}
   let built
   try {
     built = await build(request)
   } catch (e) {
     response.grammarError = e?.message ?? String(e)
+    response.modules = [...importedModules]
     return response
   }
   response.moduleErrors = built.moduleErrors
+  response.modules = [...importedModules]
   try {
     const options = {}
     if (request.top) options.top = request.top

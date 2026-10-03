@@ -15,7 +15,7 @@
             <li>Quick documentation: comments before declarations, and short docs with guide links for keywords and built-ins</li>
             <li>Errors and warnings of <a href="https://github.com/lezer-parser/generator">@lezer/generator</a> while typing</li>
             <li>Lezer Playground tool window: parse example text with the grammar while editing it, with the syntax tree and selection sync</li>
-            <li>Run configuration to generate the parser, with a gutter icon on <code>@top</code> and optional generation on save</li>
+            <li>Run configuration to generate the parser, with a gutter icon on <code>@top</code> and a floating checkbox in the editor to regenerate on save</li>
             <li>Unused rule and token inspection with a quick fix, keyword completion, precedence inlay hints</li>
             <li>With the JavaScript plugin: navigation and find usages from <code>styleTags</code> keys and terms imports to the grammar</li>
             <li>Brace matching and quote auto-closing</li>
@@ -27,12 +27,9 @@
     <!-- Uses the Node.js interpreter configured for the project, if available -->
     <depends optional="true" config-file="lezer-javascript.xml">JavaScript</depends>
 
-    <applicationListeners>
+    <projectListeners>
         <listener class="de.paulmethfessel.lezer.generator.run.GenerateOnSaveListener"
                   topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
-    </applicationListeners>
-
-    <projectListeners>
         <listener class="de.paulmethfessel.lezer.playground.PlaygroundModuleListener"
                   topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
     </projectListeners>
@@ -44,6 +41,9 @@
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <add-to-group group-id="ProjectViewPopupMenuRunGroup" anchor="last"/>
         </action>
+        <!-- Shown in the editor's floating toolbar -->
+        <action id="Lezer.GenerateOnSaveToggle" class="de.paulmethfessel.lezer.generator.run.GenerateOnSaveToggleAction"
+                text="Regenerate on Save" description="Regenerate the parser in the background when the grammar is saved"/>
     </actions>
 
     <extensionPoints>
@@ -117,6 +117,7 @@
         <notificationGroup id="Lezer Generator" displayType="BALLOON"/>
         <configurationType implementation="de.paulmethfessel.lezer.generator.run.LezerGeneratorConfigurationType"/>
         <runConfigurationProducer implementation="de.paulmethfessel.lezer.generator.run.LezerGeneratorRunConfigurationProducer"/>
+        <editorFloatingToolbarProvider implementation="de.paulmethfessel.lezer.generator.run.GenerateOnSaveFloatingToolbarProvider"/>
         <runLineMarkerContributor language="Lezer"
                                   implementationClass="de.paulmethfessel.lezer.generator.run.LezerRunLineMarkerContributor"/>
     </extensions>

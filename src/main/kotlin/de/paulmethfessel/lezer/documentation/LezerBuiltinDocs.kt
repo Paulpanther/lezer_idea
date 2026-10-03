@@ -9,9 +9,7 @@ import de.paulmethfessel.lezer.resolve.LezerResolver
 object LezerBuiltinDocs {
     const val GUIDE = "https://lezer.codemirror.net/docs/guide/"
 
-    class Doc(val signature: String, val description: String, val guideSection: String, val guideTitle: String) {
-        val guideUrl: String get() = GUIDE + "#" + guideSection
-    }
+    class Doc(val signature: String, val description: String, val guideSection: String, val guideTitle: String)
 
     /** The documentation for the keyword or built-in name [element] (a leaf), if it is one. */
     fun find(element: PsiElement): Doc? {

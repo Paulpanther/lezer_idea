@@ -4,13 +4,17 @@ import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.colors.TextAttributesKey
+import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.elementType
 import de.paulmethfessel.lezer.psi.*
 import de.paulmethfessel.lezer.resolve.LezerResolver
 
-/** Highlighting that depends on the position of an element in the PSI tree, not only on its token type. */
-class LezerHighlightingAnnotator : Annotator {
+/**
+ * Highlighting that depends on the position of an element in the PSI tree, not only on its token type. It only looks at
+ * the file itself, so it also works while indexing.
+ */
+class LezerHighlightingAnnotator : Annotator, DumbAware {
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         val key = when {
             element.elementType in LezerTokenSets.CONTEXTUAL_KEYWORDS && isKeywordPosition(element) ->

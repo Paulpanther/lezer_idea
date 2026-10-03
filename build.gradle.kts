@@ -1,4 +1,5 @@
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 
 plugins {
     id("org.jetbrains.kotlin.jvm")
@@ -33,6 +34,19 @@ sourceSets.main {
     java.srcDir(tasks.generateParser)
 }
 
+kotlin {
+    compilerOptions {
+        // Without it, classes implementing platform interfaces get bridges to their default methods, which the plugin
+        // verifier reports as uses of deprecated and experimental API
+        jvmDefault = JvmDefaultMode.NO_COMPATIBILITY
+    }
+}
+
 tasks.compileKotlin {
     dependsOn(tasks.generateLexer, tasks.generateParser)
+}
+
+tasks.test {
+    // The generator tests depend on it (see the README), so changing it must rerun them
+    inputs.property("lezerGeneratorDir", providers.environmentVariable("LEZER_GENERATOR_DIR").orElse(""))
 }

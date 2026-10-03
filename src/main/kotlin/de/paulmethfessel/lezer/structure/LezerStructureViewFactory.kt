@@ -3,7 +3,6 @@ package de.paulmethfessel.lezer.structure
 import com.intellij.ide.structureView.StructureViewBuilder
 import com.intellij.ide.structureView.StructureViewModel
 import com.intellij.ide.structureView.StructureViewModelBase
-import com.intellij.ide.structureView.StructureViewTreeElement
 import com.intellij.ide.structureView.TreeBasedStructureViewBuilder
 import com.intellij.ide.util.treeView.smartTree.Sorter
 import com.intellij.lang.PsiStructureViewFactory
@@ -23,8 +22,7 @@ class LezerStructureViewFactory : PsiStructureViewFactory {
 }
 
 class LezerStructureViewModel(file: LezerFile, editor: Editor?) :
-    StructureViewModelBase(file, editor, LezerStructureViewElement(file)),
-    StructureViewModel.ElementInfoProvider {
+    StructureViewModelBase(file, editor, LezerStructureViewElement(file)) {
 
     init {
         withSorters(Sorter.ALPHA_SORTER)
@@ -32,8 +30,4 @@ class LezerStructureViewModel(file: LezerFile, editor: Editor?) :
     }
 
     override fun isSuitable(element: PsiElement?): Boolean = element != null && super.isSuitable(element) && LezerStructure.isNode(element)
-
-    override fun isAlwaysShowsPlus(element: StructureViewTreeElement): Boolean = false
-
-    override fun isAlwaysLeaf(element: StructureViewTreeElement): Boolean = false
 }

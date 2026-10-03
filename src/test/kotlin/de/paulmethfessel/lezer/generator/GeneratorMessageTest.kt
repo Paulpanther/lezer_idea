@@ -29,4 +29,13 @@ class GeneratorMessageTest : TestCase() {
         assertNull(GeneratorMessage.parse("x (input 5:0)").offset(DocumentImpl("one line")))
         assertEquals(8, GeneratorMessage.parse("x (input 1:99)").offset(DocumentImpl("one line")))
     }
+
+    fun testReportJson() {
+        val report = GeneratorReport.parse("""{"errors":["e"],"warnings":[],"failure":null}""")
+        assertEquals(listOf("e"), report.errors)
+        assertNull(report.failure)
+        // Gson leaves missing properties null, the report must not
+        assertEquals(emptyList<String>(), GeneratorReport.parse("{}").warnings)
+        assertEquals("lezer-generator produced no output", GeneratorReport.parse("").failure)
+    }
 }

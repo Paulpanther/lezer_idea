@@ -4,6 +4,7 @@ import com.intellij.codeInsight.highlighting.HighlightErrorFilter
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiErrorElement
@@ -19,7 +20,7 @@ import de.paulmethfessel.lezer.psi.LezerTypes
  * Annotates simple syntax errors with readable messages.
  * Replaces the default highlighting of parser errors, see [LezerHighlightErrorFilter].
  */
-class LezerErrorAnnotator : Annotator {
+class LezerErrorAnnotator : Annotator, DumbAware {
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         when {
             element is PsiErrorElement -> annotateParserError(element, holder)

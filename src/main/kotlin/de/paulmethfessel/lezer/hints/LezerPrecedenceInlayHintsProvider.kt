@@ -10,11 +10,10 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.util.elementType
 import de.paulmethfessel.lezer.psi.LezerPrecedence
 import de.paulmethfessel.lezer.psi.LezerPrecedenceBody
 import de.paulmethfessel.lezer.psi.LezerPrecedenceMarker
-import de.paulmethfessel.lezer.psi.LezerTypes
+import de.paulmethfessel.lezer.psi.associativity
 import de.paulmethfessel.lezer.resolve.LezerResolver
 
 /** Shows the rank and associativity of the precedence after markers like `!times`: `!times #2 left`. */
@@ -28,18 +27,11 @@ class LezerPrecedenceInlayHintsProvider : InlayHintsProvider, DumbAware {
             val precedence = LezerResolver.resolve(name) as? LezerPrecedence ?: return
             val all = (precedence.parent as? LezerPrecedenceBody)?.precedenceList ?: return
             val rank = all.indexOf(precedence) + 1
-            val associativity = associativity(precedence)
+            val associativity = precedence.associativity.keyword
             val tooltip = "Precedence $rank of ${all.size} (highest first)" + associativity?.let { ", $it" }.orEmpty()
             sink.addPresentation(InlineInlayPosition(element.textRange.endOffset, true), null, tooltip, HintFormat.default) {
                 text(listOfNotNull("#$rank", associativity).joinToString(" "))
             }
-        }
-
-        private fun associativity(precedence: LezerPrecedence): String? = when (precedence.lastChild.elementType) {
-            LezerTypes.AT_LEFT -> "left"
-            LezerTypes.AT_RIGHT -> "right"
-            LezerTypes.AT_CUT -> "cut"
-            else -> null
         }
     }
 }

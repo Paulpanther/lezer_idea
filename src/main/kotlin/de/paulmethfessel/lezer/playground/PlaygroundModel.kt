@@ -1,5 +1,6 @@
 package de.paulmethfessel.lezer.playground
 
+import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 
 /** An `@external` declaration of the grammar, whose implementation the worker imports from [source]. */
@@ -8,7 +9,8 @@ data class ExternalDeclaration(val kind: String, val name: String, val source: S
 /** A request to the worker, see `lezer/lezer-playground.mjs`. */
 data class PlaygroundRequest(
     val id: Long,
-    val generatorDir: String,
+    /** The generator's ES module, see [de.paulmethfessel.lezer.generator.LezerGenerator.module]. */
+    val generatorModule: String,
     val grammar: String,
     val grammarDir: String,
     val input: String,
@@ -45,6 +47,24 @@ class PlaygroundResult(
     val tree: PlaygroundNode? = null,
     val grammarError: String? = null,
     val moduleErrors: List<String> = emptyList(),
+    /** The files of all `@external` implementations the worker imported so far. */
+    val modules: List<String> = emptyList(),
     val truncated: Boolean = false,
     val ms: Long = 0,
-)
+) {
+    /** The worker's JSON. Gson doesn't call constructors, so missing properties are null even if Kotlin says otherwise. */
+    private class Json(
+        val id: Long?, val tree: PlaygroundNode?, val grammarError: String?, val moduleErrors: List<String>?,
+        val modules: List<String>?, val truncated: Boolean?, val ms: Long?,
+    )
+
+    companion object {
+        fun parse(gson: Gson, json: String): PlaygroundResult {
+            val result = gson.fromJson(json, Json::class.java) ?: Json(null, null, null, null, null, null, null)
+            return PlaygroundResult(
+                result.id ?: 0, result.tree, result.grammarError, result.moduleErrors.orEmpty(), result.modules.orEmpty(),
+                result.truncated ?: false, result.ms ?: 0,
+            )
+        }
+    }
+}

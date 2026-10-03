@@ -1,10 +1,10 @@
 package de.paulmethfessel.lezer.inspections
 
 import com.intellij.codeInspection.LocalInspectionTool
-import com.intellij.codeInspection.LocalQuickFix
-import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.modcommand.ModPsiUpdater
+import com.intellij.modcommand.PsiUpdateModCommandQuickFix
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
@@ -16,8 +16,8 @@ import de.paulmethfessel.lezer.documentation.LezerDocComments
 import de.paulmethfessel.lezer.psi.LezerDeclarationKind
 import de.paulmethfessel.lezer.psi.LezerFile
 import de.paulmethfessel.lezer.psi.LezerNamedElement
-import de.paulmethfessel.lezer.psi.LezerProps
 import de.paulmethfessel.lezer.psi.LezerRuleName
+import de.paulmethfessel.lezer.psi.pseudoProp
 import de.paulmethfessel.lezer.resolve.LezerResolver
 
 /**
@@ -47,8 +47,7 @@ class LezerUnusedDeclarationInspection : LocalInspectionTool() {
         else -> false
     }
 
-    private fun isExported(element: LezerNamedElement): Boolean =
-        PsiTreeUtil.getChildOfType(element, LezerProps::class.java)?.propList.orEmpty().any { it.firstChild.text == "@export" }
+    private fun isExported(element: LezerNamedElement): Boolean = element.pseudoProp("@export") != null
 
     /** Used if referenced from outside its own declaration, so recursive rules aren't used by themselves. */
     private fun isUsed(file: LezerFile, declaration: LezerNamedElement): Boolean =
@@ -63,13 +62,14 @@ class LezerUnusedDeclarationInspection : LocalInspectionTool() {
         CachedValueProvider.Result.create(references, file)
     }
 
-    private class RemoveDeclarationFix(private val what: String, private val name: String) : LocalQuickFix {
+    private class RemoveDeclarationFix(private val what: String, private val name: String) : PsiUpdateModCommandQuickFix() {
         override fun getFamilyName(): String = "Remove unused declaration"
 
         override fun getName(): String = "Remove unused $what '$name'"
 
-        override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-            val declaration = descriptor.psiElement.parent as? LezerNamedElement ?: return
+        /** [element] is the name of the declaration, in a copy of the file. */
+        override fun applyFix(project: Project, element: PsiElement, updater: ModPsiUpdater) {
+            val declaration = element.parent as? LezerNamedElement ?: return
             // Its documentation goes with it
             val comments = LezerDocComments.commentsBefore(declaration)
             if (comments.isNotEmpty()) {
