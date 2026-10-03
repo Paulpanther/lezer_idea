@@ -22,6 +22,11 @@ Language support for [Lezer](https://lezer.codemirror.net/) grammar files (`*.gr
   its signature, kind and the node it creates. Keywords, pseudo-props (`@name`, …), character classes and built-in props
   have short descriptions with links to the [Lezer guide](https://lezer.codemirror.net/docs/guide/)
 - Errors and warnings of [`@lezer/generator`](https://github.com/lezer-parser/generator) (unused rules, conflicts, …) while typing
+- **Lezer Playground** tool window (or *Open in Lezer Playground* in a grammar's context menu): parses example text
+  with the grammar of the selected editor, also while it's being edited, and shows the syntax tree. The caret in the
+  text selects the innermost node, selecting a node highlights its range, double-clicking opens its declaration.
+  `@top` rules and dialects can be chosen in the toolbar. `@external` implementations are imported from the modules
+  named in the grammar
 - *Lezer Generator* run configuration with all generator options, started from the gutter icon on `@top`,
   optionally regenerating the parser in the background whenever the grammar is saved
 - Uses a local (`npm i -D @lezer/generator`) or global installation and offers to install it, configurable under

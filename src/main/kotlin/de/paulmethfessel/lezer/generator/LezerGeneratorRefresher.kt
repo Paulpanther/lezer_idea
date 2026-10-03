@@ -5,6 +5,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.ui.EditorNotifications
+import com.intellij.util.messages.Topic
 
 /** Updates everything that depends on the Node.js and generator installation after it changed. */
 object LezerGeneratorRefresher {
@@ -21,6 +22,18 @@ object LezerGeneratorRefresher {
         ApplicationManager.getApplication().invokeLater({
             EditorNotifications.getInstance(project).updateAllNotifications()
             DaemonCodeAnalyzer.getInstance(project).restart("Lezer generator installation changed")
+            project.messageBus.syncPublisher(LezerSetupListener.TOPIC).setupChanged()
         }, project.disposed)
+    }
+}
+
+/** Notified when the Node.js interpreter, the generator or the Lezer settings may have changed. */
+fun interface LezerSetupListener {
+    fun setupChanged()
+
+    companion object {
+        @JvmField
+        @Topic.ProjectLevel
+        val TOPIC = Topic(LezerSetupListener::class.java, Topic.BroadcastDirection.NONE)
     }
 }

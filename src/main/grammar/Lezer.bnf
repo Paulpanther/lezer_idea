@@ -20,8 +20,8 @@
     LINE_COMMENT='regexp://.*'
     BLOCK_COMMENT='regexp:/\*([^*]|\*+[^*/])*\*+/'
     STRING='regexp:("([^"\\\n]|\\.)*"|\x27([^\x27\\\n]|\\.)*\x27)'
-    CHAR_SET='regexp:\$\[([^\]\\\n]|\\.)*]'
-    INVERTED_CHAR_SET='regexp:!\[([^\]\\\n]|\\.)*]'
+    CHAR_SET='regexp:\$\[([^]\\\n]|\\.)*]'
+    INVERTED_CHAR_SET='regexp:!\[([^]\\\n]|\\.)*]'
 
     AT_TOP='@top'
     AT_TOKENS='@tokens'

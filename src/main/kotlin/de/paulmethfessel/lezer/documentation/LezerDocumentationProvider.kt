@@ -84,14 +84,9 @@ class LezerDocumentationProvider : AbstractDocumentationProvider() {
         scope(element)?.let { add("Declared in" to code(it)) }
     }
 
-    /**
-     * Rules and tokens create a node if their name is capitalized or they have an `@name` prop, see
-     * https://lezer.codemirror.net/docs/guide/#writing-a-grammar
-     */
+    /** Which node the declaration creates, see [LezerNodeNames]. */
     private fun nodeDescription(element: LezerNamedElement): String {
-        val props = PsiTreeUtil.getChildOfType(element, LezerProps::class.java)
-        val explicitName = props?.propList?.firstOrNull { it.firstChild.text == "@name" }
-            ?.let { prop -> prop.text.substringAfter('=', "").takeIf { it.isNotEmpty() } }
+        val explicitName = LezerNodeNames.explicitName(element)
         val name = element.name.orEmpty()
         return when {
             explicitName != null -> "${code(explicitName)} (from <code>@name</code>)"

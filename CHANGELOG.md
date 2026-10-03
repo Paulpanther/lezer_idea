@@ -19,3 +19,4 @@
 - Unused rule/token inspection with quick fix, keyword completion, precedence inlay hints
 - Navigation and find usages from `styleTags` keys and terms imports in JS/TS (with the JavaScript plugin)
 - Option to regenerate the parser when the grammar is saved
+- Lezer Playground tool window: syntax tree of example text with selection sync
