@@ -14,6 +14,7 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.Panel
 import com.intellij.util.ui.UIUtil
+import java.awt.Dimension
 import javax.swing.event.DocumentEvent
 
 /**
@@ -40,7 +41,11 @@ class GeneratorSelector(
         })
     }
 
-    private val status = JBLabel().apply { foreground = UIUtil.getContextHelpForeground() }
+    /** Long paths are cut off (the tooltip shows them) instead of widening the settings page. */
+    private val status = object : JBLabel() {
+        override fun getPreferredSize(): Dimension = super.getPreferredSize().apply { width = 0 }
+        override fun getMinimumSize(): Dimension = preferredSize
+    }.apply { foreground = UIUtil.getContextHelpForeground() }
 
     var mode: GeneratorMode?
         get() = modeCombo.item
@@ -58,7 +63,7 @@ class GeneratorSelector(
     fun addTo(panel: Panel) = with(panel) {
         row("Generator:") { cell(modeCombo) }
         row("Package directory:") { cell(customPath).align(AlignX.FILL) }
-        row("") { cell(status) }
+        row("") { cell(status).align(AlignX.FILL) }
         row("") {
             button("Install Locally (npm i -D)") { install(global = false) }
             button("Install Globally (npm i -g)") { install(global = true) }
@@ -79,7 +84,7 @@ class GeneratorSelector(
         val choice = modeCombo.item
         val path = customPath.text
         val file = grammarFile()
-        status.text = "Searching…"
+        setStatus("Searching…")
         ApplicationManager.getApplication().executeOnPooledThread {
             val text = when {
                 NodeLocator.find(project) == null -> "Node.js was not found"
@@ -90,8 +95,13 @@ class GeneratorSelector(
                 }
             }
             ApplicationManager.getApplication().invokeLater({
-                if (modeCombo.item == choice && customPath.text == path) status.text = text
+                if (modeCombo.item == choice && customPath.text == path) setStatus(text)
             }, ModalityState.any())
         }
+    }
+
+    private fun setStatus(text: String) {
+        status.text = text
+        status.toolTipText = text
     }
 }
